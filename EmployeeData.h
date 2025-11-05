@@ -2,9 +2,12 @@
 #include <iostream>
 #include <string>
 #include <map>
+#include <vector>
+
 using namespace std;
 
-class EmployeeData {
+class EmployeeData
+{
 private:
     string name;
     int dept_no;
@@ -15,7 +18,8 @@ public:
     EmployeeData() {};
     ~EmployeeData() {};
 
-    void setData(string name, int dept_no, int id, int income) {
+    void setData(string name, int dept_no, int id, int income)
+    {
         this->name = name;
         this->dept_no = dept_no;
         this->id = id;

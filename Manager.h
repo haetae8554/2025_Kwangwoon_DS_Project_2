@@ -3,26 +3,43 @@
 #include "BpTree.h"
 #include <fstream>
 
-class Manager {
+class Manager
+{
 private:
-	char* cmd;
-	BpTree* bptree;
-	SelectionTree* stree;
+	char *cmd;
+	BpTree *bptree;
+	SelectionTree *stree;
+	bool loaded; // load flag
 
 public:
-	Manager(int bpOrder) {		//constructor
-		
+	Manager(int bpOrder)
+	{ // constructor
+		cmd = NULL;
+		bptree = NULL;
+		stree = NULL;
+		loaded = false;
 	}
 
-
-	~Manager() {				//destructor
-		
+	~Manager()
+	{ // destructor
+		if (bptree)
+		{
+			delete bptree;
+		}
+		if (stree)
+		{
+			delete stree;
+		}
+		if (flog.is_open())
+		{
+			flog.close();
+		}
 	}
 
 	ifstream fin;
 	ofstream flog;
 
-	void run(const char* command);
+	void run(const char *command);
 	void LOAD();
 	void ADD_BP();
 	void SEARCH_BP_NAME(string name);
@@ -36,4 +53,3 @@ public:
 	void printErrorCode(int n);
 	void printSuccessCode(string success);
 };
-

@@ -1,27 +1,36 @@
 #pragma once
 #include "SelectionTreeNode.h"
-
-class SelectionTree {
+#include <algorithm>
+#include <fstream>
+class SelectionTree
+{
 private:
-    SelectionTreeNode* root;
-    ofstream* fout;
-    SelectionTreeNode* run[8];
+    SelectionTreeNode *root;
+    ofstream *fout;
+    SelectionTreeNode *run[8];
 
 public:
-    SelectionTree(ofstream* fout) {
-        
+    SelectionTree(ofstream *fout)
+    {
+        // init pointer
+        this->root = NULL;
+        this->fout = fout;
+        for (int i = 0; i < 8; i++)
+        {
+            run[i] = NULL;
+        }
     }
 
-    ~SelectionTree() {
-
+    ~SelectionTree()
+    {
     }
 
-    void setRoot(SelectionTreeNode* pN) { this->root = pN; }
-    SelectionTreeNode* getRoot() { return root; }
+    void setRoot(SelectionTreeNode *pN) { this->root = pN; }
+    SelectionTreeNode *getRoot() { return root; }
 
     void setTree();
 
-    bool Insert(EmployeeData* newData);
+    bool Insert(EmployeeData *newData);
     bool Delete();
     bool printEmployeeData(int dept_no);
 };
