@@ -347,3 +347,78 @@ BpTreeNode *BpTree::searchRange(string start, string end)
 
     return cur; // return the data node (start point of range)
 }
+
+// debug
+
+void BpTree::debugPrintTree()
+{
+
+    (*fout) << "======== DEBUG B+ TREE STRUCTURE ========\n";
+    if (root == NULL)
+    {
+        (*fout) << "  Tree is empty.\n";
+    }
+    else
+    {
+        printTreeRecursive(root, 0);
+    }
+    (*fout) << "=========================================\n\n";
+}
+
+void BpTree::printTreeRecursive(BpTreeNode *node, int depth)
+{
+    if (node == NULL)
+    {
+        return;
+    }
+
+    string indent = "";
+    for (int i = 0; i < depth; ++i)
+    {
+        indent += "  |";
+    }
+    indent += "-- ";
+
+    BpTreeIndexNode *idxNode = dynamic_cast<BpTreeIndexNode *>(node);
+    BpTreeDataNode *dataNode = dynamic_cast<BpTreeDataNode *>(node);
+
+    if (idxNode != NULL)
+    {
+
+        (*fout) << indent << "[INDEX] Keys: ";
+        map<string, BpTreeNode *> *im = idxNode->getIndexMap();
+        if (im != NULL && !im->empty())
+        {
+            for (auto const &pair : *im)
+            {
+                (*fout) << pair.first << " | ";
+            }
+        }
+        (*fout) << "\n";
+
+        printTreeRecursive(idxNode->getMostLeftChild(), depth + 1);
+
+        if (im != NULL)
+        {
+            for (auto const &pair : *im)
+            {
+                printTreeRecursive(pair.second, depth + 1);
+            }
+        }
+    }
+    else if (dataNode != NULL)
+    {
+
+        (*fout) << indent << "[LEAF] Data: ";
+        map<string, EmployeeData *> *dm = dataNode->getDataMap();
+        if (dm != NULL && !dm->empty())
+        {
+            for (auto const &pair : *dm)
+            {
+                (*fout) << pair.first << " | ";
+            }
+        }
+
+        (*fout) << " (Next: " << dataNode->getNext() << ")\n";
+    }
+}

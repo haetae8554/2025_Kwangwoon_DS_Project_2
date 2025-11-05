@@ -128,6 +128,14 @@ void Manager::run(const char *command)
 		{
 			DELETE();
 		}
+		else if (cmd == "DEBUG_PRINT_TREE") // debug
+		{
+			if (bptree)
+			{
+				bptree->debugPrintTree();
+			}
+		}
+
 		else
 		{
 			printErrorCode(800);
@@ -245,6 +253,7 @@ void Manager::ADD_BP()
 
 void Manager::SEARCH_BP_NAME(string name)
 {
+
 	BpTreeNode *leaf = bptree->searchDataNode(name);
 	if (!leaf)
 	{

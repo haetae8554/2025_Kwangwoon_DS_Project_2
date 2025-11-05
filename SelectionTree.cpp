@@ -220,8 +220,7 @@ bool SelectionTree::printEmployeeData(int dept_no)
                   return a->getName() < b->getName();
               });
 
-    // print "name/dept/id/income"
-    for (size_t i = 0; i < v.size(); i++)
+      for (size_t i = 0; i < v.size(); i++)
     {
         if (v[i] == NULL)
             continue;
