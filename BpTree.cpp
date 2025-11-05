@@ -73,6 +73,15 @@ bool BpTree::Insert(EmployeeData *newData)
             }
             return true;
         }
+        else
+        {
+            dm->insert(make_pair(newData->getName(), newData));
+            if (excessDataNode(leaf))
+            {
+                splitDataNode(leaf);
+            }
+            return true;
+        }
     }
     return false;
 }
