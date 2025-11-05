@@ -19,8 +19,7 @@ private:
 	// get first key from data node
 	string firstKeyData(BpTreeDataNode *dn);
 
-	// debug
-	void printTreeRecursive(BpTreeNode *node, int depth);
+
 
 public:
 	BpTree(ofstream *fout, int order = 3)
@@ -44,9 +43,7 @@ public:
 	BpTreeNode *searchDataNode(string name);
 	BpTreeNode *searchRange(string start, string end);
 
-	// debug
-	void debugPrintTree();
-	// In BpTree.h (private section)
+
 };
 
 #endif

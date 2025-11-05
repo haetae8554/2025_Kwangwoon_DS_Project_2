@@ -139,13 +139,6 @@ void Manager::run(const char *command)
 		{
 			DELETE();
 		}
-		else if (cmd == "DEBUG_PRINT_TREE") // debug
-		{
-			if (bptree)
-			{
-				bptree->debugPrintTree();
-			}
-		}
 
 		else
 		{
