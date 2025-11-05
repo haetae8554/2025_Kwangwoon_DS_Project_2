@@ -74,6 +74,7 @@ bool BpTree::Insert(EmployeeData *newData)
             return true;
         }
     }
+    return false;
 }
 
 bool BpTree::excessDataNode(BpTreeNode *pDataNode)

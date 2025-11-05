@@ -2,10 +2,12 @@
 #include "EmployeeData.h"
 #include "BpTreeIndexNode.h"
 #include "BpTreeDataNode.h"
+#include <sstream>
+
+using namespace std;
 
 void Manager::run(const char *command)
 {
-	// open log
 	flog.open("log.txt", ios::out | ios::trunc);
 	if (!flog.is_open())
 		return;
@@ -17,37 +19,63 @@ void Manager::run(const char *command)
 		return;
 	}
 
-	// make structures
-	bptree = new BpTree(&flog); // order not used here
+	bptree = new BpTree(&flog);
 	stree = new SelectionTree(&flog);
 
-	string token;
-	while (cmdin >> token)
+	string cmd;
+	while (cmdin >> cmd)
 	{
-		if (token == "EXIT")
+		if (cmd == "EXIT")
 		{
 			printSuccessCode("EXIT");
+			if (bptree)
+			{
+				delete bptree;
+				bptree = nullptr;
+			}
+			if (stree)
+			{
+				delete stree;
+				stree = nullptr;
+			}
 			break;
 		}
-		else if (token == "LOAD")
+		else if (cmd == "LOAD")
 		{
 			LOAD();
 		}
-		else if (token == "ADD_BP")
+		else if (cmd == "ADD_BP")
 		{
-			// parse inline like 1st project
 			string name;
 			int dept, id, income;
 			if (cmdin >> name >> dept >> id >> income)
 			{
-				flog << "========ADD_BP========\n";
 				EmployeeData *e = new EmployeeData;
 				e->setData(name, dept, id, income);
+
 				bool ok = bptree->Insert(e);
 				if (ok)
 				{
-					flog << "Success\n";
-					flog << "=====================\n\n";
+					flog << "========ADD_BP========\n";
+
+					EmployeeData *p = nullptr;
+					if (BpTreeNode *leaf = bptree->searchDataNode(name))
+					{
+						if (auto dm = leaf->getDataMap())
+						{
+							auto it = dm->find(name);
+							if (it != dm->end() && it->second)
+								p = it->second;
+						}
+					}
+					if (!p)
+						p = e;
+
+					flog << " " << p->getName() << "/"
+						 << p->getDeptNo() << "/"
+						 << p->getID() << "/"
+						 << p->getIncome() << "\n";
+					flog << " =======================\n\n";
 				}
 				else
 				{
@@ -61,12 +89,11 @@ void Manager::run(const char *command)
 				cmdin.clear();
 			}
 		}
-		else if (token == "SEARCH_BP")
+		else if (cmd == "SEARCH_BP")
 		{
 			string a, b;
 			if (cmdin >> a)
 			{
-				// try second arg
 				streampos p = cmdin.tellg();
 				if (cmdin >> b)
 				{
@@ -84,11 +111,11 @@ void Manager::run(const char *command)
 				printErrorCode(300);
 			}
 		}
-		else if (token == "PRINT_BP")
+		else if (cmd == "PRINT_BP")
 		{
 			PRINT_BP();
 		}
-		else if (token == "ADD_ST")
+		else if (cmd == "ADD_ST")
 		{
 			string kind;
 			if (cmdin >> kind)
@@ -119,12 +146,11 @@ void Manager::run(const char *command)
 				printErrorCode(500);
 			}
 		}
-		else if (token == "PRINT_ST")
+		else if (cmd == "PRINT_ST")
 		{
 			int dept_no;
 			if (cmdin >> dept_no)
 			{
-				// SelectionTree prints inside
 				bool ok = stree->printEmployeeData(dept_no);
 				if (!ok)
 					printErrorCode(600);
@@ -134,7 +160,7 @@ void Manager::run(const char *command)
 				printErrorCode(600);
 			}
 		}
-		else if (token == "DELETE")
+		else if (cmd == "DELETE")
 		{
 			DELETE();
 		}
@@ -145,6 +171,17 @@ void Manager::run(const char *command)
 	}
 
 	cmdin.close();
+
+	if (bptree)
+	{
+		delete bptree;
+		bptree = nullptr;
+	}
+	if (stree)
+	{
+		delete stree;
+		stree = nullptr;
+	}
 }
 
 void Manager::LOAD()
@@ -161,8 +198,6 @@ void Manager::LOAD()
 		printErrorCode(100);
 		return;
 	}
-
-	flog << "========LOAD========\n";
 
 	string name;
 	int dept, id, income;
@@ -182,8 +217,7 @@ void Manager::LOAD()
 
 	if (any)
 	{
-		flog << "Success\n";
-		flog << "=====================\n\n";
+		printSuccessCode("LOAD");
 		loaded = true;
 	}
 	else
@@ -192,94 +226,74 @@ void Manager::LOAD()
 	}
 }
 
-void Manager::ADD_BP()
-{
-	// not used (parse in run)
-}
+void Manager::ADD_BP() {}
 
 void Manager::SEARCH_BP_NAME(string name)
 {
-	flog << "========SEARCH_BP========\n";
-
 	BpTreeNode *leaf = bptree->searchDataNode(name);
-	if (leaf == NULL)
+	if (!leaf)
 	{
 		printErrorCode(300);
 		return;
 	}
 
-	map<string, EmployeeData *> *dm = leaf->getDataMap();
-	if (dm == NULL)
+	auto dm = leaf->getDataMap();
+	if (!dm)
 	{
 		printErrorCode(300);
 		return;
 	}
 
-	map<string, EmployeeData *>::iterator it = dm->find(name);
-	if (it == dm->end())
+	auto it = dm->find(name);
+	if (it == dm->end() || !it->second)
 	{
 		printErrorCode(300);
 		return;
 	}
 
-	if (it->second)
-	{
-		// print one employee (no static)
-		flog << it->second->getName() << "/"
-			 << it->second->getDeptNo() << "/"
-			 << it->second->getID() << "/"
-			 << it->second->getIncome() << "\n";
-		flog << "=====================\n\n";
-		return;
-	}
-
-	printErrorCode(300);
+	flog << "========SEARCH_BP========\n";
+	flog << " " << it->second->getName() << "/"
+		 << it->second->getDeptNo() << "/"
+		 << it->second->getID() << "/"
+		 << it->second->getIncome() << "\n";
+	flog << " =======================\n\n";
 }
 
 void Manager::SEARCH_BP_RANGE(string start, string end)
 {
-	flog << "========SEARCH_BP========\n";
-
 	BpTreeNode *cur = bptree->searchRange(start, end);
-	if (cur == NULL)
+	if (!cur)
 	{
 		printErrorCode(300);
 		return;
 	}
 
 	bool any = false;
+	stringstream ss;
 
 	while (cur)
 	{
-		map<string, EmployeeData *> *dm = cur->getDataMap();
-		if (dm)
+		if (auto dm = cur->getDataMap())
 		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+			for (auto it = dm->begin(); it != dm->end(); ++it)
 			{
-				if (it->second)
+				if (it->second && !(it->first < start) && !(it->first > end))
 				{
-					if (!(it->first < start))
-					{
-						if (!(it->first > end))
-						{
-							flog << it->second->getName() << "/"
-								 << it->second->getDeptNo() << "/"
-								 << it->second->getID() << "/"
-								 << it->second->getIncome() << "\n";
-							any = true;
-						}
-					}
+					ss << " " << it->second->getName() << "/"
+					   << it->second->getDeptNo() << "/"
+					   << it->second->getID() << "/"
+					   << it->second->getIncome() << "\n";
+					any = true;
 				}
 			}
 		}
 		cur = cur->getNext();
 		if (cur)
 		{
-			map<string, EmployeeData *> *dm2 = cur->getDataMap();
+			auto dm2 = cur->getDataMap();
 			if (dm2 && !dm2->empty())
 			{
-				string k = dm2->begin()->first;
-				if (k > end)
+				if (dm2->begin()->first > end)
 					cur = NULL;
 			}
 		}
@@ -291,27 +305,22 @@ void Manager::SEARCH_BP_RANGE(string start, string end)
 		return;
 	}
 
-	flog << "=====================\n\n";
+	flog << "========SEARCH_BP========\n";
+	flog << ss.str();
+	flog << " =======================\n\n";
 }
 
 void Manager::ADD_ST_DEPTNO(int dept_no)
 {
-	flog << "========ADD_ST========\n";
-
-	// go leftmost data (inline, no static)
 	BpTreeNode *cur = bptree->getRoot();
 	if (cur)
 	{
 		while (cur)
 		{
 			if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
-			{
 				cur = cur->getMostLeftChild();
-			}
 			else
-			{
 				break;
-			}
 		}
 	}
 
@@ -319,19 +328,14 @@ void Manager::ADD_ST_DEPTNO(int dept_no)
 
 	while (cur)
 	{
-		map<string, EmployeeData *> *dm = cur->getDataMap();
-		if (dm)
+		if (auto dm = cur->getDataMap())
 		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+			for (auto it = dm->begin(); it != dm->end(); ++it)
 			{
-				if (it->second)
+				if (it->second && it->second->getDeptNo() == dept_no)
 				{
-					if (it->second->getDeptNo() == dept_no)
-					{
-						bool ok = stree->Insert(it->second);
-						if (ok)
-							any = true;
-					}
+					if (stree->Insert(it->second))
+						any = true;
 				}
 			}
 		}
@@ -339,93 +343,75 @@ void Manager::ADD_ST_DEPTNO(int dept_no)
 	}
 
 	if (any)
-	{
-		flog << "Success\n";
-		flog << "=====================\n\n";
-	}
+		printSuccessCode("ADD_ST");
 	else
-	{
 		printErrorCode(500);
-	}
 }
 
 void Manager::ADD_ST_NAME(string name)
 {
-	flog << "========ADD_ST========\n";
-
 	BpTreeNode *leaf = bptree->searchDataNode(name);
-	if (leaf == NULL)
-	{
-		printErrorCode(500);
-		return;
-	}
-	map<string, EmployeeData *> *dm = leaf->getDataMap();
-	if (dm == NULL)
-	{
-		printErrorCode(500);
-		return;
-	}
-	map<string, EmployeeData *>::iterator it = dm->find(name);
-	if (it == dm->end() || it->second == NULL)
+	if (!leaf)
 	{
 		printErrorCode(500);
 		return;
 	}
 
-	bool ok = stree->Insert(it->second);
-	if (ok)
-	{
-		flog << "Success\n";
-		flog << "=====================\n\n";
-	}
-	else
+	auto dm = leaf->getDataMap();
+	if (!dm)
 	{
 		printErrorCode(500);
+		return;
 	}
+
+	auto it = dm->find(name);
+	if (it == dm->end() || !it->second)
+	{
+		printErrorCode(500);
+		return;
+	}
+
+	if (stree->Insert(it->second))
+		printSuccessCode("ADD_ST");
+	else
+		printErrorCode(500);
 }
 
 void Manager::PRINT_BP()
 {
-	flog << "========PRINT_BP========\n";
-
-	// go leftmost data (inline)
 	BpTreeNode *cur = bptree->getRoot();
 	if (cur)
 	{
 		while (cur)
 		{
 			if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
-			{
 				cur = cur->getMostLeftChild();
-			}
 			else
-			{
 				break;
-			}
 		}
 	}
 
-	if (cur == NULL)
+	if (!cur)
 	{
 		printErrorCode(400);
 		return;
 	}
 
 	bool any = false;
+	stringstream ss;
 
 	while (cur)
 	{
-		map<string, EmployeeData *> *dm = cur->getDataMap();
-		if (dm)
+		if (auto dm = cur->getDataMap())
 		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+			for (auto it = dm->begin(); it != dm->end(); ++it)
 			{
 				if (it->second)
 				{
-					flog << it->second->getName() << "/"
-						 << it->second->getDeptNo() << "/"
-						 << it->second->getID() << "/"
-						 << it->second->getIncome() << "\n";
+					ss << " " << it->second->getName() << "/"
+					   << it->second->getDeptNo() << "/"
+					   << it->second->getID() << "/"
+					   << it->second->getIncome() << "\n";
 					any = true;
 				}
 			}
@@ -439,40 +425,31 @@ void Manager::PRINT_BP()
 		return;
 	}
 
-	flog << "=====================\n\n";
+	flog << "========PRINT_BP========\n";
+	flog << ss.str();
+	flog << " =======================\n\n";
 }
 
-void Manager::PRINT_ST()
-{
-	// not used (PRINT_ST is handled in run with parameter)
-}
+void Manager::PRINT_ST() {}
 
 void Manager::DELETE()
 {
-	flog << "========DELETE========\n";
-
-	bool ok = stree->Delete();
-	if (ok)
-	{
-		flog << "Success\n";
-		flog << "=====================\n\n";
-	}
+	if (stree->Delete())
+		printSuccessCode("DELETE");
 	else
-	{
 		printErrorCode(700);
-	}
 }
 
 void Manager::printErrorCode(int n)
 {
-	flog << "========ERROR========\n";
-	flog << n << "\n";
-	flog << "=====================\n\n";
+	flog << " ========ERROR========\n";
+	flog << " " << n << "\n";
+	flog << " =======================\n\n";
 }
 
 void Manager::printSuccessCode(string success)
 {
 	flog << "========" << success << "========\n";
-	flog << "Success" << "\n";
-	flog << "====================\n\n";
+	flog << " Success\n";
+	flog << " =======================\n\n";
 }
