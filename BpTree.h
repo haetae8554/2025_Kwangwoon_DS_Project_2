@@ -12,16 +12,21 @@ class BpTree
 private:
 	BpTreeNode *root;
 	int order;
+	ofstream *fout;
 
 	BpTreeNode *nextChild(BpTreeNode *idx, const string &key);
 
 	// get first key from data node
 	string firstKeyData(BpTreeDataNode *dn);
 
+	// debug
+	void printTreeRecursive(BpTreeNode *node, int depth);
+
 public:
 	BpTree(ofstream *fout, int order = 3)
 	{
 		this->order = order;
+		this->fout = fout;
 		this->root = NULL;
 	}
 
@@ -38,6 +43,10 @@ public:
 	BpTreeNode *getRoot() { return root; }
 	BpTreeNode *searchDataNode(string name);
 	BpTreeNode *searchRange(string start, string end);
+
+	// debug
+	void debugPrintTree();
+	// In BpTree.h (private section)
 };
 
 #endif
