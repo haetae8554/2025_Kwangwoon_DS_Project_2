@@ -11,10 +11,8 @@ class BpTree
 {
 private:
 	BpTreeNode *root;
-	int order; // m children
-			   // class inner functions
+	int order;
 
-	// go down from index node by key
 	BpTreeNode *nextChild(BpTreeNode *idx, const string &key);
 
 	// get first key from data node
@@ -23,6 +21,8 @@ private:
 public:
 	BpTree(ofstream *fout, int order = 3)
 	{
+		this->order = order;
+		this->root = NULL;
 	}
 
 	~BpTree()

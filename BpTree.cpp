@@ -63,7 +63,7 @@ bool BpTree::Insert(EmployeeData *newData)
         map<string, EmployeeData *>::iterator it = dm->find(newData->getName());
         if (it != dm->end())
         {
-            // key exist?
+            // key exist
             if (it->second != NULL)
             {
                 it->second->setDeptNo(newData->getDeptNo());
