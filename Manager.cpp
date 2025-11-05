@@ -53,28 +53,39 @@ void Manager::run(const char *command)
 			ADD_BP();
 		}
 		else if (cmd == "SEARCH_BP")
-		{
-			string a, b;
-			if (fin >> a)
-			{
-				// try range (two tokens). if not two, fallback to single name
-				streampos p = fin.tellg();
-				if (fin >> b)
-				{
-					SEARCH_BP_RANGE(a, b);
-				}
-				else
-				{
-					fin.clear();
-					fin.seekg(p);
-					SEARCH_BP_NAME(a);
-				}
-			}
-			else
-			{
-				printErrorCode(300);
-			}
-		}
+        {
+            string line;
+        
+            getline(fin >> ws, line); 
+
+            if (line.empty()) {
+                printErrorCode(300);
+                continue; 
+            }
+
+           
+            stringstream ss(line);
+            string a, b;
+            
+            if (ss >> a) 
+            {
+              
+                if (ss >> b) 
+                {
+                
+                    SEARCH_BP_RANGE(a, b); 
+                }
+                else 
+                {
+                    
+                    SEARCH_BP_NAME(a); 
+                }
+            }
+            else 
+            {
+                printErrorCode(300);
+            }
+        }
 		else if (cmd == "PRINT_BP")
 		{
 			PRINT_BP();
