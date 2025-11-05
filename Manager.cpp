@@ -46,48 +46,7 @@ void Manager::run(const char *command)
 		}
 		else if (cmd == "ADD_BP")
 		{
-			string name;
-			int dept, id, income;
-			if (cmdin >> name >> dept >> id >> income)
-			{
-				EmployeeData *e = new EmployeeData;
-				e->setData(name, dept, id, income);
-
-				bool ok = bptree->Insert(e);
-				if (ok)
-				{
-					flog << "========ADD_BP========\n";
-
-					EmployeeData *p = nullptr;
-					if (BpTreeNode *leaf = bptree->searchDataNode(name))
-					{
-						if (auto dm = leaf->getDataMap())
-						{
-							auto it = dm->find(name);
-							if (it != dm->end() && it->second)
-								p = it->second;
-						}
-					}
-					if (!p)
-						p = e;
-
-					flog << " " << p->getName() << "/"
-						 << p->getDeptNo() << "/"
-						 << p->getID() << "/"
-						 << p->getIncome() << "\n";
-					flog << " =======================\n\n";
-				}
-				else
-				{
-					delete e;
-					printErrorCode(200);
-				}
-			}
-			else
-			{
-				printErrorCode(200);
-				cmdin.clear();
-			}
+			ADD_BP();
 		}
 		else if (cmd == "SEARCH_BP")
 		{
@@ -226,7 +185,51 @@ void Manager::LOAD()
 	}
 }
 
-void Manager::ADD_BP() {}
+void Manager::ADD_BP()
+{
+	string name;
+	int dept, id, income;
+	if (fin >> name >> dept >> id >> income)
+	{
+		EmployeeData *e = new EmployeeData;
+		e->setData(name, dept, id, income);
+
+		bool ok = bptree->Insert(e);
+		if (ok)
+		{
+			flog << "========ADD_BP========\n";
+
+			EmployeeData *p = nullptr;
+			if (BpTreeNode *leaf = bptree->searchDataNode(name))
+			{
+				if (auto dm = leaf->getDataMap())
+				{
+					auto it = dm->find(name);
+					if (it != dm->end() && it->second)
+						p = it->second;
+				}
+			}
+			if (!p)
+				p = e;
+
+			flog << " " << p->getName() << "/"
+				 << p->getDeptNo() << "/"
+				 << p->getID() << "/"
+				 << p->getIncome() << "\n";
+			flog << " =======================\n\n";
+		}
+		else
+		{
+			delete e;
+			printErrorCode(200);
+		}
+	}
+	else
+	{
+		printErrorCode(200);
+		fin.clear();
+	}
+}
 
 void Manager::SEARCH_BP_NAME(string name)
 {
