@@ -8,22 +8,25 @@ using namespace std;
 
 void Manager::run(const char *command)
 {
+	// open log
 	flog.open("log.txt", ios::out | ios::trunc);
 	if (!flog.is_open())
 		return;
 
-	ifstream cmdin(command);
-	if (!cmdin.is_open())
+	// open command file with member 'fin'
+	fin.open(command);
+	if (!fin.is_open())
 	{
 		printErrorCode(100);
 		return;
 	}
 
+	// make trees
 	bptree = new BpTree(&flog);
 	stree = new SelectionTree(&flog);
 
 	string cmd;
-	while (cmdin >> cmd)
+	while (fin >> cmd)
 	{
 		if (cmd == "EXIT")
 		{
@@ -46,22 +49,24 @@ void Manager::run(const char *command)
 		}
 		else if (cmd == "ADD_BP")
 		{
+			// use function that reads from fin
 			ADD_BP();
 		}
 		else if (cmd == "SEARCH_BP")
 		{
 			string a, b;
-			if (cmdin >> a)
+			if (fin >> a)
 			{
-				streampos p = cmdin.tellg();
-				if (cmdin >> b)
+				// try range (two tokens). if not two, fallback to single name
+				streampos p = fin.tellg();
+				if (fin >> b)
 				{
 					SEARCH_BP_RANGE(a, b);
 				}
 				else
 				{
-					cmdin.clear();
-					cmdin.seekg(p);
+					fin.clear();
+					fin.seekg(p);
 					SEARCH_BP_NAME(a);
 				}
 			}
@@ -77,12 +82,12 @@ void Manager::run(const char *command)
 		else if (cmd == "ADD_ST")
 		{
 			string kind;
-			if (cmdin >> kind)
+			if (fin >> kind)
 			{
 				if (kind == "dept_no")
 				{
 					int d;
-					if (cmdin >> d)
+					if (fin >> d)
 						ADD_ST_DEPTNO(d);
 					else
 						printErrorCode(500);
@@ -90,7 +95,7 @@ void Manager::run(const char *command)
 				else if (kind == "name")
 				{
 					string n;
-					if (cmdin >> n)
+					if (fin >> n)
 						ADD_ST_NAME(n);
 					else
 						printErrorCode(500);
@@ -108,7 +113,7 @@ void Manager::run(const char *command)
 		else if (cmd == "PRINT_ST")
 		{
 			int dept_no;
-			if (cmdin >> dept_no)
+			if (fin >> dept_no)
 			{
 				bool ok = stree->printEmployeeData(dept_no);
 				if (!ok)
@@ -129,7 +134,7 @@ void Manager::run(const char *command)
 		}
 	}
 
-	cmdin.close();
+	fin.close();
 
 	if (bptree)
 	{
@@ -187,8 +192,10 @@ void Manager::LOAD()
 
 void Manager::ADD_BP()
 {
+	// read from fin
 	string name;
 	int dept, id, income;
+
 	if (fin >> name >> dept >> id >> income)
 	{
 		EmployeeData *e = new EmployeeData;
@@ -199,17 +206,22 @@ void Manager::ADD_BP()
 		{
 			flog << "========ADD_BP========\n";
 
+			// find inserted or updated data
 			EmployeeData *p = nullptr;
-			if (BpTreeNode *leaf = bptree->searchDataNode(name))
+			BpTreeNode *leaf = bptree->searchDataNode(name);
+			if (leaf != NULL)
 			{
-				if (auto dm = leaf->getDataMap())
+				map<string, EmployeeData *> *dm = leaf->getDataMap();
+				if (dm != NULL)
 				{
-					auto it = dm->find(name);
-					if (it != dm->end() && it->second)
+					map<string, EmployeeData *>::iterator it = dm->find(name);
+					if (it != dm->end() && it->second != NULL)
+					{
 						p = it->second;
+					}
 				}
 			}
-			if (!p)
+			if (p == NULL)
 				p = e;
 
 			flog << " " << p->getName() << "/"
@@ -227,7 +239,7 @@ void Manager::ADD_BP()
 	else
 	{
 		printErrorCode(200);
-		fin.clear();
+		fin.clear(); // clear fail state
 	}
 }
 
@@ -240,14 +252,14 @@ void Manager::SEARCH_BP_NAME(string name)
 		return;
 	}
 
-	auto dm = leaf->getDataMap();
+	map<string, EmployeeData *> *dm = leaf->getDataMap();
 	if (!dm)
 	{
 		printErrorCode(300);
 		return;
 	}
 
-	auto it = dm->find(name);
+	map<string, EmployeeData *>::iterator it = dm->find(name);
 	if (it == dm->end() || !it->second)
 	{
 		printErrorCode(300);
@@ -276,25 +288,29 @@ void Manager::SEARCH_BP_RANGE(string start, string end)
 
 	while (cur)
 	{
-		if (auto dm = cur->getDataMap())
+		map<string, EmployeeData *> *dm = cur->getDataMap();
+		if (dm != NULL)
 		{
-			for (auto it = dm->begin(); it != dm->end(); ++it)
+			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
 			{
-				if (it->second && !(it->first < start) && !(it->first > end))
+				if (it->second != NULL)
 				{
-					ss << " " << it->second->getName() << "/"
-					   << it->second->getDeptNo() << "/"
-					   << it->second->getID() << "/"
-					   << it->second->getIncome() << "\n";
-					any = true;
+					if (!(it->first < start) && !(it->first > end))
+					{
+						ss << " " << it->second->getName() << "/"
+						   << it->second->getDeptNo() << "/"
+						   << it->second->getID() << "/"
+						   << it->second->getIncome() << "\n";
+						any = true;
+					}
 				}
 			}
 		}
 		cur = cur->getNext();
-		if (cur)
+		if (cur != NULL)
 		{
-			auto dm2 = cur->getDataMap();
-			if (dm2 && !dm2->empty())
+			map<string, EmployeeData *> *dm2 = cur->getDataMap();
+			if (dm2 != NULL && !dm2->empty())
 			{
 				if (dm2->begin()->first > end)
 					cur = NULL;
@@ -331,14 +347,18 @@ void Manager::ADD_ST_DEPTNO(int dept_no)
 
 	while (cur)
 	{
-		if (auto dm = cur->getDataMap())
+		map<string, EmployeeData *> *dm = cur->getDataMap();
+		if (dm != NULL)
 		{
-			for (auto it = dm->begin(); it != dm->end(); ++it)
+			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
 			{
-				if (it->second && it->second->getDeptNo() == dept_no)
+				if (it->second != NULL)
 				{
-					if (stree->Insert(it->second))
-						any = true;
+					if (it->second->getDeptNo() == dept_no)
+					{
+						if (stree->Insert(it->second))
+							any = true;
+					}
 				}
 			}
 		}
@@ -360,14 +380,14 @@ void Manager::ADD_ST_NAME(string name)
 		return;
 	}
 
-	auto dm = leaf->getDataMap();
+	map<string, EmployeeData *> *dm = leaf->getDataMap();
 	if (!dm)
 	{
 		printErrorCode(500);
 		return;
 	}
 
-	auto it = dm->find(name);
+	map<string, EmployeeData *>::iterator it = dm->find(name);
 	if (it == dm->end() || !it->second)
 	{
 		printErrorCode(500);
@@ -400,11 +420,12 @@ void Manager::PRINT_BP()
 
 	while (cur)
 	{
-		if (auto dm = cur->getDataMap())
+		map<string, EmployeeData *> *dm = cur->getDataMap();
+		if (dm != NULL)
 		{
-			for (auto it = dm->begin(); it != dm->end(); ++it)
+			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
 			{
-				if (it->second)
+				if (it->second != NULL)
 				{
 					ss << it->second->getName() << "/"
 					   << it->second->getDeptNo() << "/"
@@ -428,7 +449,7 @@ void Manager::PRINT_BP()
 	flog << "========================\n\n";
 }
 
-void Manager::PRINT_ST() {}
+void Manager::PRINT_ST() {} // not used (PRINT_ST is handled in run())
 
 void Manager::DELETE()
 {
