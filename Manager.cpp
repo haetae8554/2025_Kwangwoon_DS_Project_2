@@ -382,13 +382,8 @@ void Manager::PRINT_BP()
 	BpTreeNode *cur = bptree->getRoot();
 	if (cur)
 	{
-		while (cur)
-		{
-			if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
-				cur = cur->getMostLeftChild();
-			else
-				break;
-		}
+		while (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
+			cur = cur->getMostLeftChild();
 	}
 
 	if (!cur)
@@ -408,7 +403,7 @@ void Manager::PRINT_BP()
 			{
 				if (it->second)
 				{
-					ss << " " << it->second->getName() << "/"
+					ss << it->second->getName() << "/"
 					   << it->second->getDeptNo() << "/"
 					   << it->second->getID() << "/"
 					   << it->second->getIncome() << "\n";
@@ -427,7 +422,7 @@ void Manager::PRINT_BP()
 
 	flog << "========PRINT_BP========\n";
 	flog << ss.str();
-	flog << " =======================\n\n";
+	flog << "========================\n\n";
 }
 
 void Manager::PRINT_ST() {}
