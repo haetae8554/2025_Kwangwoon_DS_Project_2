@@ -47,7 +47,7 @@ bool EmployeeHeap::IsEmpty()
 
 void EmployeeHeap::UpHeap(int index)
 {
-    // bubble up by income
+    // bubble up
     while (index > 1)
     {
         int parent = index / 2;

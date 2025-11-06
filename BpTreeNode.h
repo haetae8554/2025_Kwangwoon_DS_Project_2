@@ -13,6 +13,7 @@ public:
 		pParent = NULL;
 		pMostLeftChild = NULL;
 	}
+	// not ues virtual -> memory leak
 	virtual ~BpTreeNode()
 	{
 	}

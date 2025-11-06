@@ -194,7 +194,7 @@ bool SelectionTree::printEmployeeData(int dept_no)
         return false;
 
     // copy heap for heap not changed
-    std::vector<EmployeeData *> v;
+    vector<EmployeeData *> v;
     hp->GetAll(v);
 
     // select

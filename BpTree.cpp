@@ -312,6 +312,7 @@ BpTreeNode *BpTree::searchDataNode(string name)
 
 void BpTree::searchRange(string start, string end)
 {
+    // error
     if (root == NULL)
     {
         *fout << "========ERROR========\n";
@@ -319,7 +320,7 @@ void BpTree::searchRange(string start, string end)
         *fout << "=====================\n\n";
         return;
     }
-
+    // not find start
     BpTreeNode *cur = searchDataNode(start);
     if (!cur)
     {
@@ -332,6 +333,7 @@ void BpTree::searchRange(string start, string end)
     bool any = false;
     stringstream ss;
 
+    // cur(start) -> end
     while (cur)
     {
         map<string, EmployeeData *> *dm = cur->getDataMap();
@@ -342,14 +344,15 @@ void BpTree::searchRange(string start, string end)
                 if (it->second)
                 {
                     const string &key = it->first;
+                    // start<key<end
+                    bool S = !(key < start);
+                    bool E = !(key > end);
+                    // key == end fisrt alpabet
+                    bool key_E = (key.compare(0, end.size(), end) == 0);
 
-                    // key ∈ [start, end] or key starts_with(end)
-                    bool ge_start = !(key < start);
-                    bool le_end = !(key > end);
-                    bool starts_with_end = (key.compare(0, end.size(), end) == 0);
-
-                    if (ge_start && (le_end || starts_with_end))
+                    if (S && (E || key_E))
                     {
+                        // check 3 state all ok ->print
                         ss << " " << it->second->getName() << "/"
                            << it->second->getDeptNo() << "/"
                            << it->second->getID() << "/"
@@ -364,6 +367,7 @@ void BpTree::searchRange(string start, string end)
         BpTreeNode *next = cur->getNext();
         if (next)
         {
+            // in end == find end ->print and break
             auto dm2 = next->getDataMap();
             if (dm2 && !dm2->empty())
             {
@@ -389,13 +393,13 @@ void BpTree::searchRange(string start, string end)
     *fout << " =======================\n\n";
 }
 
+// for destructor
 void BpTree::freeNode(BpTreeNode *n)
 {
     if (n == NULL)
         return;
 
-    // index node: free most-left
-    // all children in index map
+    // all children in index map cut
     if (dynamic_cast<BpTreeIndexNode *>(n) != NULL)
     {
         BpTreeIndexNode *in = (BpTreeIndexNode *)n;
@@ -421,10 +425,11 @@ void BpTree::freeNode(BpTreeNode *n)
         map<string, EmployeeData *> *dm = dn->getDataMap();
         if (dm != NULL)
         {
-            for (auto &kv : *dm)
+            for (auto &cn : *dm)
             {
-                if (kv.second)
-                    delete kv.second; // EmployeeData free
+                if (cn.second)
+                    // EmployeeData free
+                    delete cn.second;
             }
             dm->clear();
         }

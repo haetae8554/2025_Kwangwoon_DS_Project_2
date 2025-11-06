@@ -26,7 +26,7 @@ void Manager::run(const char *command)
 	stree = new SelectionTree(&flog);
 
 	string line;
-	while (std::getline(fin, line))
+	while (getline(fin, line))
 	{
 		// trim
 		auto ltrim = [](string &s)
@@ -54,20 +54,20 @@ void Manager::run(const char *command)
 		if (line.empty())
 			continue;
 
-		// tokenize
-		std::istringstream iss(line);
-		std::vector<std::string> tok;
-		for (std::string t; iss >> t;)
-			tok.push_back(t);
-		if (tok.empty())
+		// cuting cmd
+		istringstream input_cmd(line);
+		vector<string> cut_cmd;
+		for (string t; input_cmd >> t;)
+			cut_cmd.push_back(t);
+		if (cut_cmd.empty())
 			continue;
 
-		const std::string &cmd = tok[0];
+		const string &cmd = cut_cmd[0];
 
-		// EXIT (no args)
+		// EXIT
 		if (cmd == "EXIT")
 		{
-			if (tok.size() != 1)
+			if (cut_cmd.size() != 1)
 			{
 				printErrorCode(800);
 				continue;
@@ -75,10 +75,10 @@ void Manager::run(const char *command)
 			printSuccessCode("EXIT");
 			break; // loop out, then free trees
 		}
-		// LOAD (no args)
+		// LOAD
 		else if (cmd == "LOAD")
 		{
-			if (tok.size() != 1)
+			if (cut_cmd.size() != 1)
 			{
 				printErrorCode(100);
 				continue;
@@ -90,11 +90,11 @@ void Manager::run(const char *command)
 		else if (cmd == "ADD_BP")
 		{
 
-			if (tok.size() == 5)
+			if (cut_cmd.size() == 5)
 			{
-				const std::string &name = tok[1];
+				const string &name = cut_cmd[1];
 				int dept = 0, id = 0, income = 0;
-				std::istringstream a(tok[2]), b(tok[3]), c(tok[4]);
+				istringstream a(cut_cmd[2]), b(cut_cmd[3]), c(cut_cmd[4]);
 
 				if (!(a >> dept) || !(b >> id) || !(c >> income))
 				{
@@ -114,41 +114,41 @@ void Manager::run(const char *command)
 		// SEARCH_BP name  SEARCH_BP start end
 		else if (cmd == "SEARCH_BP")
 		{
-			if (tok.size() == 2)
+			if (cut_cmd.size() == 2)
 			{
-				SEARCH_BP_NAME(tok[1]);
+				SEARCH_BP_NAME(cut_cmd[1]);
 			}
-			else if (tok.size() == 3)
+			else if (cut_cmd.size() == 3)
 			{
-				SEARCH_BP_RANGE(tok[1], tok[2]);
+				SEARCH_BP_RANGE(cut_cmd[1], cut_cmd[2]);
 			}
 			else
 			{
 				printErrorCode(300);
 			}
 		}
-		// PRINT_BP (no args)
+		// PRINT_BP
 		else if (cmd == "PRINT_BP")
 		{
-			if (tok.size() != 1)
+			if (cut_cmd.size() != 1)
 			{
 				printErrorCode(400);
 				continue;
 			}
 			PRINT_BP();
 		}
-		// ADD_ST dept_no d   |   ADD_ST name n
+		// ADD_ST dept_no d  or ADD_ST name n
 		else if (cmd == "ADD_ST")
 		{
-			if (tok.size() != 3)
+			if (cut_cmd.size() != 3)
 			{
 				printErrorCode(500);
 				continue;
 			}
-			if (tok[1] == "dept_no")
+			if (cut_cmd[1] == "dept_no")
 			{
 				int d = 0;
-				std::istringstream v(tok[2]);
+				istringstream v(cut_cmd[2]);
 				if (!(v >> d))
 				{
 					printErrorCode(500);
@@ -156,9 +156,9 @@ void Manager::run(const char *command)
 				}
 				ADD_ST_DEPTNO(d);
 			}
-			else if (tok[1] == "name")
+			else if (cut_cmd[1] == "name")
 			{
-				ADD_ST_NAME(tok[2]);
+				ADD_ST_NAME(cut_cmd[2]);
 			}
 			else
 			{
@@ -168,10 +168,10 @@ void Manager::run(const char *command)
 		// PRINT_ST dept_no
 		else if (cmd == "PRINT_ST")
 		{
-			if (tok.size() == 2)
+			if (cut_cmd.size() == 2)
 			{
 				int d = 0;
-				std::istringstream v(tok[1]);
+				istringstream v(cut_cmd[1]);
 				if (!(v >> d))
 				{
 					printErrorCode(600);
@@ -180,7 +180,7 @@ void Manager::run(const char *command)
 				if (!stree->printEmployeeData(d))
 					printErrorCode(600);
 			}
-			else if (tok.size() == 1)
+			else if (cut_cmd.size() == 1)
 			{
 				PRINT_ST();
 			}
@@ -189,10 +189,10 @@ void Manager::run(const char *command)
 				printErrorCode(600);
 			}
 		}
-		// DELETE (no args)
+		// DELETE
 		else if (cmd == "DELETE")
 		{
-			if (tok.size() != 1)
+			if (cut_cmd.size() != 1)
 			{
 				printErrorCode(700);
 				continue;
@@ -202,7 +202,7 @@ void Manager::run(const char *command)
 			else
 				printErrorCode(700);
 		}
-		// unknown
+		// unknown cmd
 		else
 		{
 			printErrorCode(800);
@@ -283,7 +283,7 @@ void Manager::ADD_BP(const string &name, int dept, int id, int income)
 			map<string, EmployeeData *> *dm = leaf->getDataMap();
 			if (dm != NULL)
 			{
-				map<string, EmployeeData *>::iterator it = dm->find(name);
+				auto it = dm->find(name);
 				if (it != dm->end() && it->second != NULL)
 				{
 					p = it->second;
@@ -322,7 +322,7 @@ void Manager::SEARCH_BP_NAME(string name)
 		return;
 	}
 
-	map<string, EmployeeData *>::iterator it = dm->find(name);
+	auto it = dm->find(name);
 	if (it == dm->end() || !it->second)
 	{
 		printErrorCode(300);
@@ -363,7 +363,7 @@ void Manager::ADD_ST_DEPTNO(int dept_no)
 		map<string, EmployeeData *> *dm = cur->getDataMap();
 		if (dm != NULL)
 		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+			for (auto it = dm->begin(); it != dm->end(); ++it)
 			{
 				if (it->second != NULL)
 				{
@@ -400,7 +400,7 @@ void Manager::ADD_ST_NAME(string name)
 		return;
 	}
 
-	map<string, EmployeeData *>::iterator it = dm->find(name);
+	auto it = dm->find(name);
 	if (it == dm->end() || !it->second)
 	{
 		printErrorCode(500);
@@ -436,7 +436,7 @@ void Manager::PRINT_BP()
 		map<string, EmployeeData *> *dm = cur->getDataMap();
 		if (dm != NULL)
 		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+			for (auto it = dm->begin(); it != dm->end(); ++it)
 			{
 				if (it->second != NULL)
 				{
