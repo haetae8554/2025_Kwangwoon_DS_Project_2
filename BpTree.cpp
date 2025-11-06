@@ -1,6 +1,5 @@
 #include "BpTree.h"
-
-// next child
+// find next child
 BpTreeNode *BpTree::nextChild(BpTreeNode *idx, const string &key)
 {
     BpTreeNode *child = idx->getMostLeftChild();
@@ -8,7 +7,7 @@ BpTreeNode *BpTree::nextChild(BpTreeNode *idx, const string &key)
 
     if (im != NULL)
     {
-        for (map<string, BpTreeNode *>::iterator it = im->begin(); it != im->end(); ++it)
+        for (auto it = im->begin(); it != im->end(); ++it)
         {
             if (key >= it->first)
             {
@@ -287,13 +286,13 @@ BpTreeNode *BpTree::searchDataNode(string name)
         return NULL;
     }
 
-    // root is data node
+    // root data node
     if (dynamic_cast<BpTreeIndexNode *>(root) == NULL)
     {
         return root;
     }
 
-    // down to leaf
+    // down
     BpTreeNode *cur = root;
 
     while (cur != NULL)
@@ -308,7 +307,7 @@ BpTreeNode *BpTree::searchDataNode(string name)
         }
     }
 
-    return cur; // leaf or NULL
+    return cur;
 }
 
 void BpTree::searchRange(string start, string end)
