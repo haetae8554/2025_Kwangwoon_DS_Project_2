@@ -236,3 +236,23 @@ bool SelectionTree::printEmployeeData(int dept_no)
     (*fout) << " =======================\n\n";
     return true;
 }
+
+// delete
+void SelectionTree::freeNode(SelectionTreeNode *node)
+{
+    if (node == nullptr)
+        return;
+
+    freeNode(node->getLeftChild());
+    freeNode(node->getRightChild());
+
+    delete node;
+}
+// destructor
+SelectionTree::~SelectionTree()
+{
+    freeNode(root);
+    root = NULL;
+    for (int i = 0; i < 8; ++i)
+        run[i] = NULL;
+}

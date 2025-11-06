@@ -1,6 +1,6 @@
 #include "BpTree.h"
 
-// next child  key (for index node)
+// next child
 BpTreeNode *BpTree::nextChild(BpTreeNode *idx, const string &key)
 {
     BpTreeNode *child = idx->getMostLeftChild();
@@ -23,7 +23,7 @@ BpTreeNode *BpTree::nextChild(BpTreeNode *idx, const string &key)
     return child;
 }
 
-// get first key from data node
+// first key
 string BpTree::firstKeyData(BpTreeDataNode *dn)
 {
     string k = "";
@@ -41,29 +41,30 @@ string BpTree::firstKeyData(BpTreeDataNode *dn)
 
 bool BpTree::Insert(EmployeeData *newData)
 {
-    // B+-Tree empty
+    // tree empty
     if (root == NULL)
     {
-        BpTreeDataNode *dn = new BpTreeDataNode; // make Data Node
+        BpTreeDataNode *dn = new BpTreeDataNode; // data node
         dn->insertDataMap(newData->getName(), newData);
         root = dn;
         return true;
     }
-    //
+
     BpTreeNode *leaf = searchDataNode(newData->getName());
-    // if leaf not found
+    // leaf not found
     if (leaf == NULL)
     {
         return false;
     }
-    // mapping
+
+    // map
     map<string, EmployeeData *> *dm = leaf->getDataMap();
     if (dm != NULL)
     {
         map<string, EmployeeData *>::iterator it = dm->find(newData->getName());
         if (it != dm->end())
         {
-            // key exist
+            // key exists
             if (it->second != NULL)
             {
                 it->second->setDeptNo(newData->getDeptNo());
@@ -90,17 +91,17 @@ bool BpTree::excessDataNode(BpTreeNode *pDataNode)
 {
     map<string, EmployeeData *> *dm = pDataNode->getDataMap();
 
-    // if map pointer null -> treat as not exceed
+    // null map -> no exceed
     if (dm == NULL)
     {
         return false;
     }
 
-    // leaf can have at most (order - 1) keys
+    // max keys = order-1
     int count = (int)dm->size();
     int maxKeys = order - 1;
 
-    // if current keys > max allowed -> exceed
+    // exceed?
     if (count > maxKeys)
     {
         return true;
@@ -111,21 +112,20 @@ bool BpTree::excessDataNode(BpTreeNode *pDataNode)
 
 bool BpTree::excessIndexNode(BpTreeNode *pIndexNode)
 {
-    // inex map
+    // index map
     map<string, BpTreeNode *> *im = pIndexNode->getIndexMap();
 
-    // if map pointer null -> not exceed
+    // null map -> no exceed
     if (im == NULL)
     {
         return false;
     }
 
-    // index node
-    //(number of children) = (number of keys) + 1
+    // children = keys+1
     int keyCount = (int)im->size();
     int childCount = keyCount + 1;
 
-    // if child count > order -> node exceed
+    // exceed?
     if (childCount > order)
     {
         return true;
@@ -136,11 +136,10 @@ bool BpTree::excessIndexNode(BpTreeNode *pIndexNode)
 
 void BpTree::splitDataNode(BpTreeNode *pDataNode)
 {
-
     BpTreeDataNode *left = (BpTreeDataNode *)pDataNode;
     BpTreeDataNode *right = new BpTreeDataNode;
 
-    // half move right
+    // move half to right
     map<string, EmployeeData *> *dm = left->getDataMap();
     int sz = (int)dm->size();
     int mid = sz / 2;
@@ -160,7 +159,8 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
         }
         idx++;
     }
-    // link connect
+
+    // link neighbors
     right->setNext(left->getNext());
     if (left->getNext() != NULL)
     {
@@ -168,11 +168,12 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
     }
     left->setNext(right);
     right->setPrev(left);
-    // check parent
+
+    // parent
     BpTreeNode *parent = left->getParent();
     string sep = firstKeyData(right);
 
-    // if no parent
+    // no parent
     if (parent == NULL)
     {
         BpTreeIndexNode *nr = new BpTreeIndexNode;
@@ -183,7 +184,8 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
         root = nr;
         return;
     }
-    // exist parent
+
+    // has parent
     BpTreeIndexNode *pin = (BpTreeIndexNode *)parent;
     pin->insertIndexMap(sep, right);
     right->setParent(pin);
@@ -196,17 +198,17 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
 
 void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
 {
-    // old index node
+    // left node
     BpTreeIndexNode *left = (BpTreeIndexNode *)pIndexNode;
 
-    // new index node
+    // right node
     BpTreeIndexNode *right = new BpTreeIndexNode;
 
     map<string, BpTreeNode *> *im = left->getIndexMap();
     int sz = (int)im->size();
     int mid = sz / 2;
 
-    // find key iterator
+    // to mid
     map<string, BpTreeNode *>::iterator it = im->begin();
     int i = 0;
     while (i < mid && it != im->end())
@@ -220,7 +222,7 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
         return;
     }
 
-    // promote key and right child
+    // promote key
     string promoteKey = it->first;
     BpTreeNode *promoteRightChild = it->second;
 
@@ -242,7 +244,7 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
         ++it_right;
     }
 
-    // erase keys from left
+    // erase from left
     map<string, BpTreeNode *>::iterator it_del = it;
     ++it_del;
     while (it_del != im->end())
@@ -265,17 +267,18 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
         return;
     }
 
-    // parent exists -> insert promoteKey into parent
+    // insert to parent
     BpTreeIndexNode *pin = (BpTreeIndexNode *)parent;
     pin->insertIndexMap(promoteKey, right);
     right->setParent(pin);
 
-    // check parent exceed
+    // check parent
     if (excessIndexNode(pin))
     {
         splitIndexNode(pin);
     }
 }
+
 BpTreeNode *BpTree::searchDataNode(string name)
 {
     // tree empty
@@ -284,25 +287,23 @@ BpTreeNode *BpTree::searchDataNode(string name)
         return NULL;
     }
 
-    // root data node (leaf)
+    // root is data node
     if (dynamic_cast<BpTreeIndexNode *>(root) == NULL)
     {
         return root;
     }
 
-    // down  index nodes
+    // down to leaf
     BpTreeNode *cur = root;
 
     while (cur != NULL)
     {
         if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
         {
-            // choose next child by key
             cur = nextChild(cur, name);
         }
         else
         {
-            // reach a data node (leaf)
             break;
         }
     }
@@ -312,26 +313,26 @@ BpTreeNode *BpTree::searchDataNode(string name)
 
 BpTreeNode *BpTree::searchRange(string start, string end)
 {
-    // if tree is empty
+    // tree empty
     if (root == NULL)
     {
         return NULL;
     }
 
-    // find the leaf node that contains the 'start' key
+    // start leaf
     BpTreeNode *leaf = searchDataNode(start);
     if (leaf == NULL)
     {
         return NULL;
     }
 
-    // if the leaf is a data node, return its address
+    // data node?
     if (dynamic_cast<BpTreeDataNode *>(leaf) != NULL)
     {
         return leaf;
     }
 
-    // if not a data node (rare case), go down until reach data node
+    // go down
     BpTreeNode *cur = leaf;
     while (cur != NULL)
     {
@@ -345,8 +346,48 @@ BpTreeNode *BpTree::searchRange(string start, string end)
         }
     }
 
-    return cur; // return the data node (start point of range)
+    return cur; // start data node
 }
 
+void BpTree::freeNode(BpTreeNode *n)
+{
+    if (n == nullptr)
+        return;
 
+    // index node
+    if (dynamic_cast<BpTreeIndexNode *>(n) != NULL)
+    {
+        BpTreeIndexNode *in = (BpTreeIndexNode *)n;
+        map<string, BpTreeNode *> *im = in->getIndexMap();
+        if (im != NULL)
+        {
+            for (map<string, BpTreeNode *>::iterator it = im->begin(); it != im->end(); ++it)
+            {
+                freeNode(it->second);
+            }
+        }
+    }
+    // data node
+    else if (dynamic_cast<BpTreeDataNode *>(n) != NULL)
+    {
+        BpTreeDataNode *dn = (BpTreeDataNode *)n;
+        map<string, EmployeeData *> *dm = dn->getDataMap();
+        if (dm != NULL)
+        {
+            for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+            {
+                if (it->second != NULL)
+                {
+                    delete it->second;
+                }
+            }
+        }
+    }
 
+    delete n;
+}
+BpTree::~BpTree()
+{
+    freeNode(root);
+    root = NULL;
+}

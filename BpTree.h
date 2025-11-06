@@ -18,8 +18,7 @@ private:
 
 	// get first key from data node
 	string firstKeyData(BpTreeDataNode *dn);
-
-
+	void freeNode(BpTreeNode *n);
 
 public:
 	BpTree(ofstream *fout, int order = 3)
@@ -42,8 +41,6 @@ public:
 	BpTreeNode *getRoot() { return root; }
 	BpTreeNode *searchDataNode(string name);
 	BpTreeNode *searchRange(string start, string end);
-
-
 };
 
 #endif

@@ -13,7 +13,7 @@ void Manager::run(const char *command)
 	if (!flog.is_open())
 		return;
 
-	// open command file with member 'fin'
+	// open command
 	fin.open(command);
 	if (!fin.is_open())
 	{
@@ -21,7 +21,7 @@ void Manager::run(const char *command)
 		return;
 	}
 
-	// make trees
+	// create trees
 	bptree = new BpTree(&flog);
 	stree = new SelectionTree(&flog);
 
@@ -49,7 +49,7 @@ void Manager::run(const char *command)
 		}
 		else if (cmd == "ADD_BP")
 		{
-			// use function that reads from fin
+			// run ADD_BP()
 			ADD_BP();
 		}
 		else if (cmd == "SEARCH_BP")
@@ -69,15 +69,12 @@ void Manager::run(const char *command)
 
 			if (ss >> a)
 			{
-
 				if (ss >> b)
 				{
-
 					SEARCH_BP_RANGE(a, b);
 				}
 				else
 				{
-
 					SEARCH_BP_NAME(a);
 				}
 			}
@@ -129,7 +126,6 @@ void Manager::run(const char *command)
 		{
 			DELETE();
 		}
-
 		else
 		{
 			printErrorCode(800);
@@ -194,7 +190,7 @@ void Manager::LOAD()
 
 void Manager::ADD_BP()
 {
-	// read from fin
+	// read args
 	string name;
 	int dept, id, income;
 
@@ -208,7 +204,7 @@ void Manager::ADD_BP()
 		{
 			flog << "========ADD_BP========\n";
 
-			// find inserted or updated data
+			// find data
 			EmployeeData *p = nullptr;
 			BpTreeNode *leaf = bptree->searchDataNode(name);
 			if (leaf != NULL)
@@ -241,13 +237,12 @@ void Manager::ADD_BP()
 	else
 	{
 		printErrorCode(200);
-		fin.clear(); // clear fail state
+		fin.clear();
 	}
 }
 
 void Manager::SEARCH_BP_NAME(string name)
 {
-
 	BpTreeNode *leaf = bptree->searchDataNode(name);
 	if (!leaf)
 	{
@@ -454,24 +449,21 @@ void Manager::PRINT_BP()
 
 void Manager::PRINT_ST()
 {
-	// read dept_no from fin
+	// read dept_no
 	int dept_no;
 
 	if (fin >> dept_no)
 	{
-		// try print by dept_no
+		// print by dept_no
 		bool ok = stree->printEmployeeData(dept_no);
 		if (!ok)
 		{
-			// no data or wrong dept -> error 600
 			printErrorCode(600);
 		}
 	}
 	else
 	{
-		// no parameter -> error 600
 		printErrorCode(600);
-		// clear fail state for next read
 		fin.clear();
 	}
 }

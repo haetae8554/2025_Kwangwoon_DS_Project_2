@@ -33,4 +33,6 @@ public:
     bool Insert(EmployeeData *newData);
     bool Delete();
     bool printEmployeeData(int dept_no);
+
+    void freeNode(SelectionTreeNode *node);
 };
