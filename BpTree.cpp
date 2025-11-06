@@ -60,7 +60,7 @@ bool BpTree::Insert(EmployeeData *newData)
     map<string, EmployeeData *> *dm = leaf->getDataMap();
     if (dm != NULL)
     {
-        map<string, EmployeeData *>::iterator it = dm->find(newData->getName());
+        auto it = dm->find(newData->getName());
         if (it != dm->end())
         {
             // key exists
@@ -144,12 +144,12 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
     int mid = sz / 2;
 
     int idx = 0;
-    for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end();)
+    for (auto it = dm->begin(); it != dm->end();)
     {
         if (idx >= mid)
         {
             right->insertDataMap(it->first, it->second);
-            map<string, EmployeeData *>::iterator cur = it++;
+            auto cur = it++;
             dm->erase(cur);
         }
         else
@@ -208,7 +208,7 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
     int mid = sz / 2;
 
     // to mid
-    map<string, BpTreeNode *>::iterator it = im->begin();
+    auto it = im->begin();
     int i = 0;
     while (i < mid && it != im->end())
     {
@@ -231,7 +231,7 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
         promoteRightChild->setParent(right);
     }
 
-    map<string, BpTreeNode *>::iterator it_right = it;
+    auto it_right = it;
     ++it_right;
     while (it_right != im->end())
     {
@@ -244,11 +244,11 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
     }
 
     // erase from left
-    map<string, BpTreeNode *>::iterator it_del = it;
+    auto it_del = it;
     ++it_del;
     while (it_del != im->end())
     {
-        map<string, BpTreeNode *>::iterator cur = it_del++;
+        auto cur = it_del++;
         im->erase(cur);
     }
     im->erase(promoteKey);
