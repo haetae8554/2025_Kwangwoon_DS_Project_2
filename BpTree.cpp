@@ -351,36 +351,42 @@ BpTreeNode *BpTree::searchRange(string start, string end)
 
 void BpTree::freeNode(BpTreeNode *n)
 {
-    if (n == nullptr)
+    if (n == NULL)
         return;
 
-    // index node
+    // index node: free most-left
+    // all children in index map
     if (dynamic_cast<BpTreeIndexNode *>(n) != NULL)
     {
         BpTreeIndexNode *in = (BpTreeIndexNode *)n;
+
+        BpTreeNode *ml = in->getMostLeftChild();
+        if (ml)
+            freeNode(ml);
+
         map<string, BpTreeNode *> *im = in->getIndexMap();
         if (im != NULL)
         {
-            for (map<string, BpTreeNode *>::iterator it = im->begin(); it != im->end(); ++it)
+            for (auto &kv : *im)
             {
-                freeNode(it->second);
+                if (kv.second)
+                    freeNode(kv.second);
             }
         }
     }
-    // data node
+
     else if (dynamic_cast<BpTreeDataNode *>(n) != NULL)
     {
         BpTreeDataNode *dn = (BpTreeDataNode *)n;
         map<string, EmployeeData *> *dm = dn->getDataMap();
         if (dm != NULL)
         {
-            for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
+            for (auto &kv : *dm)
             {
-                if (it->second != NULL)
-                {
-                    delete it->second;
-                }
+                if (kv.second)
+                    delete kv.second; // EmployeeData free
             }
+            dm->clear();
         }
     }
 
