@@ -30,6 +30,8 @@ public:
 
 	~BpTree()
 	{
+		freeNode(root);
+		root = NULL;
 	}
 
 	/* essential */

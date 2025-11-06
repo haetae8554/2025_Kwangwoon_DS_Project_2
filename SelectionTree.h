@@ -23,6 +23,10 @@ public:
 
     ~SelectionTree()
     {
+        freeNode(root);
+        root = NULL;
+        for (int i = 0; i < 8; ++i)
+            run[i] = NULL;
     }
 
     void setRoot(SelectionTreeNode *pN) { this->root = pN; }
