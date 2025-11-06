@@ -1,6 +1,6 @@
 #include "SelectionTree.h"
 
-// helper: map dept_no to run index (0~7)
+// helper: map dept_no to run index 0~7
 static int dept_to_idx(int dept_no)
 {
     if (dept_no == 100)
@@ -22,7 +22,7 @@ static int dept_to_idx(int dept_no)
     return -1;
 }
 
-// helper: choose winner by income
+// helper: choose max by income
 static EmployeeData *choose_max(EmployeeData *a, EmployeeData *b)
 {
     if (a == NULL && b == NULL)
@@ -36,7 +36,7 @@ static EmployeeData *choose_max(EmployeeData *a, EmployeeData *b)
     return b;
 }
 
-// helper: update path to root
+// helper: update path up to root
 static void update_up(SelectionTreeNode *leaf)
 {
     SelectionTreeNode *cur = leaf;
@@ -48,6 +48,7 @@ static void update_up(SelectionTreeNode *leaf)
 
         EmployeeData *L = NULL;
         EmployeeData *R = NULL;
+
         if (p->getLeftChild() != NULL)
         {
             L = p->getLeftChild()->getEmployeeData();
@@ -64,13 +65,14 @@ static void update_up(SelectionTreeNode *leaf)
 // build perfect binary tree with 8 leaves
 void SelectionTree::setTree()
 {
-    // make 15 nodes (index 1..15), leaves are 8..15
+    // make 15 nodes (1..15), leaves are 8..15
     SelectionTreeNode *node[16];
     for (int i = 1; i <= 15; i++)
     {
         node[i] = new SelectionTreeNode();
     }
-    // link parent-child
+
+    // link parent and child
     for (int i = 1; i <= 7; i++)
     {
         node[i]->setLeftChild(node[i * 2]);
@@ -78,25 +80,27 @@ void SelectionTree::setTree()
         node[i * 2]->setParent(node[i]);
         node[i * 2 + 1]->setParent(node[i]);
     }
-    // set root
-    this->root = node[1];
 
-    // map 8 leaves to run (0~7)
+    // set root
+    root = node[1];
+
+    // map leaves to run
     for (int k = 0; k < 8; k++)
     {
         run[k] = node[8 + k];
-        // heap is lazy (make when insert)
-        // set leaf data from heap later
     }
 }
 
-// insert one EmployeeData into its dept heap and update winners
+// insert one data into its dept heap and update to root
 bool SelectionTree::Insert(EmployeeData *newData)
 {
     if (newData == NULL)
         return false;
+
     if (root == NULL)
+    {
         setTree();
+    }
 
     int idx = dept_to_idx(newData->getDeptNo());
     if (idx < 0)
@@ -110,22 +114,31 @@ bool SelectionTree::Insert(EmployeeData *newData)
     {
         leaf->HeapInit(); // make heap
     }
-    // insert to heap
+
+    // push data into heap
     leaf->getHeap()->Insert(newData);
 
-    // leaf shows heap top
-    leaf->setEmployeeData(leaf->getHeap()->Top());
+    // set leaf data by heap top
+    if (!leaf->getHeap()->IsEmpty())
+    {
+        leaf->setEmployeeData(leaf->getHeap()->Top());
+    }
+    else
+    {
+        leaf->setEmployeeData(NULL);
+    }
 
     // update to root
     update_up(leaf);
     return true;
 }
 
-// delete root winner (remove from corresponding heap) and update
+// delete root winner from its heap and update to root
 bool SelectionTree::Delete()
 {
     if (root == NULL)
         return false;
+
     EmployeeData *win = root->getEmployeeData();
     if (win == NULL)
         return false;
@@ -142,17 +155,17 @@ bool SelectionTree::Delete()
     if (leaf->getHeap()->IsEmpty())
         return false;
 
-    // remove from heap
+    // remove one from heap
     leaf->getHeap()->Delete();
 
-    // refresh leaf data (top or null)
-    if (leaf->getHeap()->IsEmpty())
+    // set leaf data again
+    if (!leaf->getHeap()->IsEmpty())
     {
-        leaf->setEmployeeData(NULL);
+        leaf->setEmployeeData(leaf->getHeap()->Top());
     }
     else
     {
-        leaf->setEmployeeData(leaf->getHeap()->Top());
+        leaf->setEmployeeData(NULL);
     }
 
     // update to root
@@ -160,78 +173,66 @@ bool SelectionTree::Delete()
     return true;
 }
 
-// print all data of dept_no by name ascending (do not change heap)
+// print all data of dept by name asc (do not change heap)
 bool SelectionTree::printEmployeeData(int dept_no)
 {
-    // header for this command
-    (*fout) << "========PRINT_ST " << dept_no << "========\n";
-
+    // check basic
     if (root == NULL)
-    {
-        (*fout) << "Error: Tree not built\n";
-        (*fout) << "=====================\n\n";
         return false;
-    }
 
     int idx = dept_to_idx(dept_no);
     if (idx < 0)
-    {
-        (*fout) << "Error: Invalid department\n";
-        (*fout) << "=====================\n\n";
         return false;
-    }
 
     SelectionTreeNode *leaf = run[idx];
     if (leaf == NULL)
-    {
-        (*fout) << "Error: No leaf for dept\n";
-        (*fout) << "=====================\n\n";
         return false;
-    }
 
     EmployeeHeap *hp = leaf->getHeap();
     if (hp == NULL)
-    {
-        (*fout) << "Error: No heap\n";
-        (*fout) << "=====================\n\n";
         return false;
-    }
     if (hp->IsEmpty())
-    {
-        (*fout) << "Error: No employee data\n";
-        (*fout) << "=====================\n\n";
         return false;
-    }
 
     // get all
     std::vector<EmployeeData *> v;
     hp->GetAll(v);
 
-    // sort by name asc
-    std::sort(v.begin(), v.end(),
-              [](EmployeeData *a, EmployeeData *b) -> bool
-              {
-                  if (a == NULL && b == NULL)
-                      return false;
-                  if (a != NULL && b == NULL)
-                      return true;
-                  if (a == NULL && b != NULL)
-                      return false;
-                  return a->getName() < b->getName();
-              });
-
-      for (size_t i = 0; i < v.size(); i++)
+    // selection sort by name asc
+    for (size_t i = 0; i < v.size(); i++)
     {
         if (v[i] == NULL)
             continue;
-        (*fout)
-            << v[i]->getName() << "/"
-            << v[i]->getDeptNo() << "/"
-            << v[i]->getID() << "/"
-            << v[i]->getIncome() << "\n";
+        size_t min_idx = i;
+        for (size_t j = i + 1; j < v.size(); j++)
+        {
+            if (v[j] == NULL)
+                continue;
+            if (v[j]->getName() < v[min_idx]->getName())
+            {
+                min_idx = j;
+            }
+        }
+        if (min_idx != i)
+        {
+            EmployeeData *tmp = v[i];
+            v[i] = v[min_idx];
+            v[min_idx] = tmp;
+        }
     }
 
-    // footer
-    (*fout) << "=====================\n\n";
+    (*fout) << "========PRINT_ST========\n";
+
+    for (size_t i = 0; i < v.size(); i++)
+    {
+        if (v[i] == NULL)
+            continue;
+        (*fout) << v[i]->getName() << "/"
+                << v[i]->getDeptNo() << "/"
+                << v[i]->getID() << "/"
+                << v[i]->getIncome() << "\n";
+    }
+
+    (*fout) << "=======================\n\n";
     return true;
 }
