@@ -174,9 +174,10 @@ bool SelectionTree::Delete()
 }
 
 // print all data
+
 bool SelectionTree::printEmployeeData(int dept_no)
 {
-    // check basic
+    // basic check
     if (root == NULL)
         return false;
 
@@ -189,41 +190,42 @@ bool SelectionTree::printEmployeeData(int dept_no)
         return false;
 
     EmployeeHeap *hp = leaf->getHeap();
-    if (hp == NULL)
-        return false;
-    if (hp->IsEmpty())
+    if (hp == NULL || hp->IsEmpty())
         return false;
 
-    // get all
+    // copy heap for heap not changed
     std::vector<EmployeeData *> v;
     hp->GetAll(v);
 
-    // selection sort
-    for (size_t i = 0; i < v.size(); i++)
+    // select
+    for (size_t i = 0; i < v.size(); ++i)
     {
         if (v[i] == NULL)
             continue;
-        size_t min_idx = i;
-        for (size_t j = i + 1; j < v.size(); j++)
+        size_t best = i;
+        for (size_t j = i + 1; j < v.size(); ++j)
         {
             if (v[j] == NULL)
                 continue;
-            if (v[j]->getName() < v[min_idx]->getName())
-            {
-                min_idx = j;
-            }
+
+            int incJ = v[j]->getIncome();
+            int incB = v[best]->getIncome();
+
+            if (incJ > incB)
+                best = j;
+            else if (incJ == incB && v[j]->getName() < v[best]->getName())
+                best = j;
         }
-        if (min_idx != i)
+        if (best != i)
         {
             EmployeeData *tmp = v[i];
-            v[i] = v[min_idx];
-            v[min_idx] = tmp;
+            v[i] = v[best];
+            v[best] = tmp;
         }
     }
 
     (*fout) << "========PRINT_ST========\n";
-
-    for (size_t i = 0; i < v.size(); i++)
+    for (size_t i = 0; i < v.size(); ++i)
     {
         if (v[i] == NULL)
             continue;
@@ -232,7 +234,6 @@ bool SelectionTree::printEmployeeData(int dept_no)
                 << v[i]->getID() << "/"
                 << v[i]->getIncome() << "\n";
     }
-
     (*fout) << " =======================\n\n";
     return true;
 }
