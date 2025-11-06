@@ -6,7 +6,7 @@
 #include "BpTreeIndexNode.h"
 #include "EmployeeData.h"
 #include "SelectionTree.h"
-
+#include <sstream>
 class BpTree
 {
 private:
@@ -42,7 +42,7 @@ public:
 	void splitIndexNode(BpTreeNode *pIndexNode);
 	BpTreeNode *getRoot() { return root; }
 	BpTreeNode *searchDataNode(string name);
-	BpTreeNode *searchRange(string start, string end);
+	void searchRange(string start, string end);
 };
 
 #endif

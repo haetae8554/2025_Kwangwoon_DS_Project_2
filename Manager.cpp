@@ -13,7 +13,7 @@ void Manager::run(const char *command)
 	if (!flog.is_open())
 		return;
 
-	// open command
+	// open command file
 	fin.open(command);
 	if (!fin.is_open())
 	{
@@ -25,107 +25,184 @@ void Manager::run(const char *command)
 	bptree = new BpTree(&flog);
 	stree = new SelectionTree(&flog);
 
-	string cmd;
-	while (fin >> cmd)
+	string line;
+	while (std::getline(fin, line))
 	{
+		// trim
+		auto ltrim = [](string &s)
+		{
+			size_t p = s.find_first_not_of(" \t\r\n");
+			if (p == string::npos)
+			{
+				s.clear();
+				return;
+			}
+			s.erase(0, p);
+		};
+		auto rtrim = [](string &s)
+		{
+			size_t p = s.find_last_not_of(" \t\r\n");
+			if (p == string::npos)
+			{
+				s.clear();
+				return;
+			}
+			s.erase(p + 1);
+		};
+		ltrim(line);
+		rtrim(line);
+		if (line.empty())
+			continue;
+
+		// tokenize
+		std::istringstream iss(line);
+		std::vector<std::string> tok;
+		for (std::string t; iss >> t;)
+			tok.push_back(t);
+		if (tok.empty())
+			continue;
+
+		const std::string &cmd = tok[0];
+
+		// EXIT (no args)
 		if (cmd == "EXIT")
 		{
-			printSuccessCode("EXIT");
-			if (bptree)
+			if (tok.size() != 1)
 			{
-				delete bptree;
-				bptree = nullptr;
-			}
-			if (stree)
-			{
-				delete stree;
-				stree = nullptr;
-			}
-			break;
-		}
-		else if (cmd == "LOAD")
-		{
-			LOAD();
-		}
-		else if (cmd == "ADD_BP")
-		{
-			// run ADD_BP()
-			ADD_BP();
-		}
-		else if (cmd == "SEARCH_BP")
-		{
-			string line;
-
-			getline(fin >> ws, line);
-
-			if (line.empty())
-			{
-				printErrorCode(300);
+				printErrorCode(800);
 				continue;
 			}
-
-			stringstream ss(line);
-			string a, b;
-
-			if (ss >> a)
+			printSuccessCode("EXIT");
+			break; // loop out, then free trees
+		}
+		// LOAD (no args)
+		else if (cmd == "LOAD")
+		{
+			if (tok.size() != 1)
 			{
-				if (ss >> b)
+				printErrorCode(100);
+				continue;
+			}
+			LOAD();
+		}
+
+		// ADD BP
+		else if (cmd == "ADD_BP")
+		{
+
+			if (tok.size() == 5)
+			{
+				const std::string &name = tok[1];
+				int dept = 0, id = 0, income = 0;
+				std::istringstream a(tok[2]), b(tok[3]), c(tok[4]);
+
+				if (!(a >> dept) || !(b >> id) || !(c >> income))
 				{
-					SEARCH_BP_RANGE(a, b);
+					printErrorCode(200);
+					continue;
 				}
-				else
-				{
-					SEARCH_BP_NAME(a);
-				}
+
+				ADD_BP(name, dept, id, income);
+			}
+			else
+			{
+
+				printErrorCode(200);
+			}
+		}
+
+		// SEARCH_BP name  SEARCH_BP start end
+		else if (cmd == "SEARCH_BP")
+		{
+			if (tok.size() == 2)
+			{
+				SEARCH_BP_NAME(tok[1]);
+			}
+			else if (tok.size() == 3)
+			{
+				SEARCH_BP_RANGE(tok[1], tok[2]);
 			}
 			else
 			{
 				printErrorCode(300);
 			}
 		}
+		// PRINT_BP (no args)
 		else if (cmd == "PRINT_BP")
 		{
+			if (tok.size() != 1)
+			{
+				printErrorCode(400);
+				continue;
+			}
 			PRINT_BP();
 		}
+		// ADD_ST dept_no d   |   ADD_ST name n
 		else if (cmd == "ADD_ST")
 		{
-			string kind;
-			if (fin >> kind)
+			if (tok.size() != 3)
 			{
-				if (kind == "dept_no")
-				{
-					int d;
-					if (fin >> d)
-						ADD_ST_DEPTNO(d);
-					else
-						printErrorCode(500);
-				}
-				else if (kind == "name")
-				{
-					string n;
-					if (fin >> n)
-						ADD_ST_NAME(n);
-					else
-						printErrorCode(500);
-				}
-				else
+				printErrorCode(500);
+				continue;
+			}
+			if (tok[1] == "dept_no")
+			{
+				int d = 0;
+				std::istringstream v(tok[2]);
+				if (!(v >> d))
 				{
 					printErrorCode(500);
+					continue;
 				}
+				ADD_ST_DEPTNO(d);
+			}
+			else if (tok[1] == "name")
+			{
+				ADD_ST_NAME(tok[2]);
 			}
 			else
 			{
 				printErrorCode(500);
 			}
 		}
+		// PRINT_ST dept_no
 		else if (cmd == "PRINT_ST")
 		{
-			PRINT_ST();
+			if (tok.size() == 2)
+			{
+				int d = 0;
+				std::istringstream v(tok[1]);
+				if (!(v >> d))
+				{
+					printErrorCode(600);
+					continue;
+				}
+				if (!stree->printEmployeeData(d))
+					printErrorCode(600);
+			}
+			else if (tok.size() == 1)
+			{
+				PRINT_ST();
+			}
+			else
+			{
+				printErrorCode(600);
+			}
 		}
+		// DELETE (no args)
 		else if (cmd == "DELETE")
 		{
-			DELETE();
+			if (tok.size() != 1)
+			{
+				printErrorCode(700);
+				continue;
+			}
+			if (stree->Delete())
+				printSuccessCode("DELETE");
+			else
+				printErrorCode(700);
 		}
+		// unknown
 		else
 		{
 			printErrorCode(800);
@@ -188,56 +265,44 @@ void Manager::LOAD()
 	}
 }
 
-void Manager::ADD_BP()
+void Manager::ADD_BP(const string &name, int dept, int id, int income)
 {
-	// read args
-	string name;
-	int dept, id, income;
+	EmployeeData *e = new EmployeeData;
+	e->setData(name, dept, id, income);
 
-	if (fin >> name >> dept >> id >> income)
+	bool ok = bptree->Insert(e);
+	if (ok)
 	{
-		EmployeeData *e = new EmployeeData;
-		e->setData(name, dept, id, income);
+		flog << "========ADD_BP========\n";
 
-		bool ok = bptree->Insert(e);
-		if (ok)
+		// find data
+		EmployeeData *p = nullptr;
+		BpTreeNode *leaf = bptree->searchDataNode(name);
+		if (leaf != NULL)
 		{
-			flog << "========ADD_BP========\n";
-
-			// find data
-			EmployeeData *p = nullptr;
-			BpTreeNode *leaf = bptree->searchDataNode(name);
-			if (leaf != NULL)
+			map<string, EmployeeData *> *dm = leaf->getDataMap();
+			if (dm != NULL)
 			{
-				map<string, EmployeeData *> *dm = leaf->getDataMap();
-				if (dm != NULL)
+				map<string, EmployeeData *>::iterator it = dm->find(name);
+				if (it != dm->end() && it->second != NULL)
 				{
-					map<string, EmployeeData *>::iterator it = dm->find(name);
-					if (it != dm->end() && it->second != NULL)
-					{
-						p = it->second;
-					}
+					p = it->second;
 				}
 			}
-			if (p == NULL)
-				p = e;
+		}
+		if (p == NULL)
+			p = e;
 
-			flog << " " << p->getName() << "/"
-				 << p->getDeptNo() << "/"
-				 << p->getID() << "/"
-				 << p->getIncome() << "\n";
-			flog << " =======================\n\n";
-		}
-		else
-		{
-			delete e;
-			printErrorCode(200);
-		}
+		flog << " " << p->getName() << "/"
+			 << p->getDeptNo() << "/"
+			 << p->getID() << "/"
+			 << p->getIncome() << "\n";
+		flog << " =======================\n\n";
 	}
 	else
 	{
+		delete e;
 		printErrorCode(200);
-		fin.clear();
 	}
 }
 
@@ -274,57 +339,7 @@ void Manager::SEARCH_BP_NAME(string name)
 
 void Manager::SEARCH_BP_RANGE(string start, string end)
 {
-	BpTreeNode *cur = bptree->searchRange(start, end);
-	if (!cur)
-	{
-		printErrorCode(300);
-		return;
-	}
-
-	bool any = false;
-	stringstream ss;
-
-	while (cur)
-	{
-		map<string, EmployeeData *> *dm = cur->getDataMap();
-		if (dm != NULL)
-		{
-			for (map<string, EmployeeData *>::iterator it = dm->begin(); it != dm->end(); ++it)
-			{
-				if (it->second != NULL)
-				{
-					if (!(it->first < start) && !(it->first > end))
-					{
-						ss << " " << it->second->getName() << "/"
-						   << it->second->getDeptNo() << "/"
-						   << it->second->getID() << "/"
-						   << it->second->getIncome() << "\n";
-						any = true;
-					}
-				}
-			}
-		}
-		cur = cur->getNext();
-		if (cur != NULL)
-		{
-			map<string, EmployeeData *> *dm2 = cur->getDataMap();
-			if (dm2 != NULL && !dm2->empty())
-			{
-				if (dm2->begin()->first > end)
-					cur = NULL;
-			}
-		}
-	}
-
-	if (!any)
-	{
-		printErrorCode(300);
-		return;
-	}
-
-	flog << "========SEARCH_BP========\n";
-	flog << ss.str();
-	flog << " =======================\n\n";
+	bptree->searchRange(start, end);
 }
 
 void Manager::ADD_ST_DEPTNO(int dept_no)

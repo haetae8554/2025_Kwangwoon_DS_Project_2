@@ -43,7 +43,7 @@ public:
 
 	void run(const char *command);
 	void LOAD();
-	void ADD_BP();
+	void ADD_BP(const string &name, int dept, int id, int income);
 	void SEARCH_BP_NAME(string name);
 	void SEARCH_BP_RANGE(string start, string end);
 	void PRINT_BP();

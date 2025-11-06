@@ -311,42 +311,83 @@ BpTreeNode *BpTree::searchDataNode(string name)
     return cur; // leaf or NULL
 }
 
-BpTreeNode *BpTree::searchRange(string start, string end)
+void BpTree::searchRange(string start, string end)
 {
-    // tree empty
     if (root == NULL)
     {
-        return NULL;
+        *fout << "========ERROR========\n";
+        *fout << "300\n";
+        *fout << "=====================\n\n";
+        return;
     }
 
-    // start leaf
-    BpTreeNode *leaf = searchDataNode(start);
-    if (leaf == NULL)
+    BpTreeNode *cur = searchDataNode(start);
+    if (!cur)
     {
-        return NULL;
+        *fout << "========ERROR========\n";
+        *fout << "300\n";
+        *fout << "=====================\n\n";
+        return;
     }
 
-    // data node?
-    if (dynamic_cast<BpTreeDataNode *>(leaf) != NULL)
-    {
-        return leaf;
-    }
+    bool any = false;
+    stringstream ss;
 
-    // go down
-    BpTreeNode *cur = leaf;
-    while (cur != NULL)
+    while (cur)
     {
-        if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
+        map<string, EmployeeData *> *dm = cur->getDataMap();
+        if (dm)
         {
-            cur = nextChild(cur, start);
+            for (auto it = dm->begin(); it != dm->end(); ++it)
+            {
+                if (it->second)
+                {
+                    const string &key = it->first;
+
+                    // key ∈ [start, end] or key starts_with(end)
+                    bool ge_start = !(key < start);
+                    bool le_end = !(key > end);
+                    bool starts_with_end = (key.compare(0, end.size(), end) == 0);
+
+                    if (ge_start && (le_end || starts_with_end))
+                    {
+                        ss << " " << it->second->getName() << "/"
+                           << it->second->getDeptNo() << "/"
+                           << it->second->getID() << "/"
+                           << it->second->getIncome() << "\n";
+                        any = true;
+                    }
+                }
+            }
         }
-        else
+
+        // next node
+        BpTreeNode *next = cur->getNext();
+        if (next)
         {
-            break;
+            auto dm2 = next->getDataMap();
+            if (dm2 && !dm2->empty())
+            {
+                const string &first = dm2->begin()->first;
+                bool starts_with_end = (first.compare(0, end.size(), end) == 0);
+                if (!starts_with_end && first > end)
+                    break;
+            }
         }
+        cur = next;
     }
 
-    return cur; // start data node
+    if (!any)
+    {
+        *fout << "========ERROR========\n";
+        *fout << "300\n";
+        *fout << "=====================\n\n";
+        return;
+    }
+
+    *fout << "========SEARCH_BP========\n";
+    *fout << ss.str();
+    *fout << " =======================\n\n";
 }
 
 void BpTree::freeNode(BpTreeNode *n)
