@@ -248,11 +248,3 @@ void SelectionTree::freeNode(SelectionTreeNode *node)
 
     delete node;
 }
-// destructor
-SelectionTree::~SelectionTree()
-{
-    freeNode(root);
-    root = NULL;
-    for (int i = 0; i < 8; ++i)
-        run[i] = NULL;
-}

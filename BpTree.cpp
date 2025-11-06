@@ -386,8 +386,3 @@ void BpTree::freeNode(BpTreeNode *n)
 
     delete n;
 }
-BpTree::~BpTree()
-{
-    freeNode(root);
-    root = NULL;
-}
