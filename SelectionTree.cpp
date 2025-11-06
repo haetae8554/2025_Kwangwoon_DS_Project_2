@@ -1,6 +1,6 @@
 #include "SelectionTree.h"
 
-// helper: map dept_no to run index 0~7
+// map dept_no to run index 0~7
 static int dept_to_idx(int dept_no)
 {
     if (dept_no == 100)
@@ -22,7 +22,7 @@ static int dept_to_idx(int dept_no)
     return -1;
 }
 
-// helper: choose max by income
+// choose max
 static EmployeeData *choose_max(EmployeeData *a, EmployeeData *b)
 {
     if (a == NULL && b == NULL)
@@ -36,7 +36,7 @@ static EmployeeData *choose_max(EmployeeData *a, EmployeeData *b)
     return b;
 }
 
-// helper: update path up to root
+// update path
 static void update_up(SelectionTreeNode *leaf)
 {
     SelectionTreeNode *cur = leaf;
@@ -62,7 +62,7 @@ static void update_up(SelectionTreeNode *leaf)
     }
 }
 
-// build perfect binary tree with 8 leaves
+// build  binary tree
 void SelectionTree::setTree()
 {
     // make 15 nodes (1..15), leaves are 8..15
@@ -91,7 +91,7 @@ void SelectionTree::setTree()
     }
 }
 
-// insert one data into its dept heap and update to root
+// insert data
 bool SelectionTree::Insert(EmployeeData *newData)
 {
     if (newData == NULL)
@@ -133,7 +133,7 @@ bool SelectionTree::Insert(EmployeeData *newData)
     return true;
 }
 
-// delete root winner from its heap and update to root
+// delete root winner
 bool SelectionTree::Delete()
 {
     if (root == NULL)
@@ -173,7 +173,7 @@ bool SelectionTree::Delete()
     return true;
 }
 
-// print all data of dept by name asc (do not change heap)
+// print all data
 bool SelectionTree::printEmployeeData(int dept_no)
 {
     // check basic
@@ -198,7 +198,7 @@ bool SelectionTree::printEmployeeData(int dept_no)
     std::vector<EmployeeData *> v;
     hp->GetAll(v);
 
-    // selection sort by name asc
+    // selection sort
     for (size_t i = 0; i < v.size(); i++)
     {
         if (v[i] == NULL)
@@ -233,6 +233,6 @@ bool SelectionTree::printEmployeeData(int dept_no)
                 << v[i]->getIncome() << "\n";
     }
 
-    (*fout) << "=======================\n\n";
+    (*fout) << " =======================\n\n";
     return true;
 }

@@ -53,39 +53,39 @@ void Manager::run(const char *command)
 			ADD_BP();
 		}
 		else if (cmd == "SEARCH_BP")
-        {
-            string line;
-        
-            getline(fin >> ws, line); 
+		{
+			string line;
 
-            if (line.empty()) {
-                printErrorCode(300);
-                continue; 
-            }
+			getline(fin >> ws, line);
 
-           
-            stringstream ss(line);
-            string a, b;
-            
-            if (ss >> a) 
-            {
-              
-                if (ss >> b) 
-                {
-                
-                    SEARCH_BP_RANGE(a, b); 
-                }
-                else 
-                {
-                    
-                    SEARCH_BP_NAME(a); 
-                }
-            }
-            else 
-            {
-                printErrorCode(300);
-            }
-        }
+			if (line.empty())
+			{
+				printErrorCode(300);
+				continue;
+			}
+
+			stringstream ss(line);
+			string a, b;
+
+			if (ss >> a)
+			{
+
+				if (ss >> b)
+				{
+
+					SEARCH_BP_RANGE(a, b);
+				}
+				else
+				{
+
+					SEARCH_BP_NAME(a);
+				}
+			}
+			else
+			{
+				printErrorCode(300);
+			}
+		}
 		else if (cmd == "PRINT_BP")
 		{
 			PRINT_BP();
@@ -123,17 +123,7 @@ void Manager::run(const char *command)
 		}
 		else if (cmd == "PRINT_ST")
 		{
-			int dept_no;
-			if (fin >> dept_no)
-			{
-				bool ok = stree->printEmployeeData(dept_no);
-				if (!ok)
-					printErrorCode(600);
-			}
-			else
-			{
-				printErrorCode(600);
-			}
+			PRINT_ST();
 		}
 		else if (cmd == "DELETE")
 		{
@@ -462,7 +452,29 @@ void Manager::PRINT_BP()
 	flog << "========================\n\n";
 }
 
-void Manager::PRINT_ST() {} // not used (PRINT_ST is handled in run())
+void Manager::PRINT_ST()
+{
+	// read dept_no from fin
+	int dept_no;
+
+	if (fin >> dept_no)
+	{
+		// try print by dept_no
+		bool ok = stree->printEmployeeData(dept_no);
+		if (!ok)
+		{
+			// no data or wrong dept -> error 600
+			printErrorCode(600);
+		}
+	}
+	else
+	{
+		// no parameter -> error 600
+		printErrorCode(600);
+		// clear fail state for next read
+		fin.clear();
+	}
+}
 
 void Manager::DELETE()
 {
