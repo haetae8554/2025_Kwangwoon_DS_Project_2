@@ -306,7 +306,20 @@ BpTreeNode *BpTree::searchDataNode(string name)
             break;
         }
     }
-
+    if (cur != NULL)
+    {
+        map<string, EmployeeData *> *dm = cur->getDataMap();
+        if (dm != NULL)
+        {
+            cout << "[DEBUG] Node key count: " << dm->size() << endl;
+            cout << "[DEBUG] Keys: ";
+            for (auto &kv : *dm)
+            {
+                cout << kv.first << " ";
+            }
+            cout << endl;
+        }
+    }
     return cur;
 }
 
@@ -343,7 +356,7 @@ void BpTree::searchRange(string start, string end)
             {
                 if (it->second)
                 {
-                    *fout << "========test========\n";
+
                     const string &key = it->first;
                     // start<key<end
                     bool S = !(key < start);
