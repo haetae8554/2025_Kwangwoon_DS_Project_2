@@ -141,12 +141,12 @@ void BpTree::splitDataNode(BpTreeNode *pDataNode)
     // move half to right
     map<string, EmployeeData *> *dm = left->getDataMap();
     int sz = (int)dm->size();
-    int mid = sz / 2;
+    int p = sz / 2;
 
     int idx = 0;
     for (auto it = dm->begin(); it != dm->end();)
     {
-        if (idx >= mid)
+        if (idx >= p)
         {
             right->insertDataMap(it->first, it->second);
             auto cur = it++;
@@ -205,12 +205,12 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
 
     map<string, BpTreeNode *> *im = left->getIndexMap();
     int sz = (int)im->size();
-    int mid = sz / 2;
+    int p = sz / 2;
 
-    //  mid
+    //  p
     auto it = im->begin();
     int i = 0;
-    while (i < mid && it != im->end())
+    while (i < p && it != im->end())
     {
         ++it;
         i++;
@@ -223,12 +223,12 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
 
     // promote key
     string promoteKey = it->first;
-    BpTreeNode *promoteRightChild = it->second;
+    BpTreeNode *RightChild = it->second;
 
-    right->setMostLeftChild(promoteRightChild);
-    if (promoteRightChild != NULL)
+    right->setMostLeftChild(RightChild);
+    if (RightChild != NULL)
     {
-        promoteRightChild->setParent(right);
+        RightChild->setParent(right);
     }
 
     auto it_right = it;
@@ -287,39 +287,27 @@ BpTreeNode *BpTree::searchDataNode(string name)
     }
 
     // root data node
-    if (dynamic_cast<BpTreeIndexNode *>(root) == NULL)
+    if (root->getIndexMap() == NULL)
     {
         return root;
     }
 
-    // down
+    // root
     BpTreeNode *cur = root;
 
     while (cur != NULL)
     {
-        if (dynamic_cast<BpTreeIndexNode *>(cur) != NULL)
+        // find node
+        if (cur->getIndexMap() != NULL) // index node
         {
             cur = nextChild(cur, name);
         }
-        else
+        else // data node
         {
             break;
         }
     }
-    if (cur != NULL)
-    {
-        map<string, EmployeeData *> *dm = cur->getDataMap();
-        if (dm != NULL)
-        {
-            cout << "[DEBUG] Node key count: " << dm->size() << endl;
-            cout << "[DEBUG] Keys: ";
-            for (auto &kv : *dm)
-            {
-                cout << kv.first << " ";
-            }
-            cout << endl;
-        }
-    }
+
     return cur;
 }
 
@@ -356,17 +344,15 @@ void BpTree::searchRange(string start, string end)
             {
                 if (it->second)
                 {
-
                     const string &key = it->first;
-                    // start<key<end
+                    // start <= key <= end  or  key starts with end
                     bool S = !(key < start);
                     bool E = !(key > end);
-                    // key == end fisrt alpabet
                     bool key_E = (key.compare(0, end.size(), end) == 0);
 
                     if (S && (E || key_E))
                     {
-                        // check 3 state all ok ->print
+                        // print
                         ss << " " << it->second->getName() << "/"
                            << it->second->getDeptNo() << "/"
                            << it->second->getID() << "/"
@@ -381,7 +367,7 @@ void BpTree::searchRange(string start, string end)
         BpTreeNode *next = cur->getNext();
         if (next)
         {
-            // in end == find end ->print and break
+            // stop  next first key > end
             auto dm2 = next->getDataMap();
             if (dm2 && !dm2->empty())
             {
