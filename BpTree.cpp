@@ -207,7 +207,7 @@ void BpTree::splitIndexNode(BpTreeNode *pIndexNode)
     int sz = (int)im->size();
     int mid = sz / 2;
 
-    // to mid
+    //  mid
     auto it = im->begin();
     int i = 0;
     while (i < mid && it != im->end())
@@ -333,7 +333,7 @@ void BpTree::searchRange(string start, string end)
     bool any = false;
     stringstream ss;
 
-    // cur(start) -> end
+    // start -> end
     while (cur)
     {
         map<string, EmployeeData *> *dm = cur->getDataMap();
@@ -343,6 +343,7 @@ void BpTree::searchRange(string start, string end)
             {
                 if (it->second)
                 {
+                    *fout << "========test========\n";
                     const string &key = it->first;
                     // start<key<end
                     bool S = !(key < start);

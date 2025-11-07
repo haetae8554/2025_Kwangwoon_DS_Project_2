@@ -10,6 +10,7 @@ private:
 	BpTree *bptree;
 	SelectionTree *stree;
 	bool loaded; // load flag
+	int bpOrder;
 
 public:
 	Manager(int bpOrder)
@@ -17,6 +18,7 @@ public:
 		cmd = NULL;
 		bptree = NULL;
 		stree = NULL;
+		this->bpOrder = bpOrder;
 		loaded = false;
 	}
 

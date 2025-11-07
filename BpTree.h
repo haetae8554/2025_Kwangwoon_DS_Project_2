@@ -22,7 +22,7 @@ private:
 	void freeNode(BpTreeNode *n);
 
 public:
-	BpTree(ofstream *fout, int order = 3)
+	BpTree(ofstream *fout, int order)
 	{
 		this->order = order;
 		this->fout = fout;

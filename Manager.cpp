@@ -22,7 +22,7 @@ void Manager::run(const char *command)
 	}
 
 	// create trees
-	bptree = new BpTree(&flog);
+	bptree = new BpTree(&flog, bpOrder);
 	stree = new SelectionTree(&flog);
 
 	string line;
