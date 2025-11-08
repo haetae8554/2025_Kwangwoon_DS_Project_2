@@ -75,7 +75,7 @@ void EmployeeHeap::UpHeap(int index)
 
 void EmployeeHeap::DownHeap(int index)
 {
-    // push down by income
+    //  down
     while (true)
     {
         int left = index * 2;
