@@ -194,45 +194,45 @@ bool SelectionTree::printEmployeeData(int dept_no)
         return false;
 
     // copy heap for heap not changed
-    vector<EmployeeData *> v;
-    hp->GetAll(v);
+    vector<EmployeeData *> copy_heap;
+    hp->GetAll(copy_heap);
 
     // select
-    for (size_t i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < copy_heap.size(); ++i)
     {
-        if (v[i] == NULL)
+        if (copy_heap[i] == NULL)
             continue;
         size_t best = i;
-        for (size_t j = i + 1; j < v.size(); ++j)
+        for (size_t j = i + 1; j < copy_heap.size(); ++j)
         {
-            if (v[j] == NULL)
+            if (copy_heap[j] == NULL)
                 continue;
 
-            int incJ = v[j]->getIncome();
-            int incB = v[best]->getIncome();
+            int challenger = copy_heap[j]->getIncome();
+            int winner = copy_heap[best]->getIncome();
 
-            if (incJ > incB)
+            if (challenger > winner)
                 best = j;
-            else if (incJ == incB && v[j]->getName() < v[best]->getName())
+            else if (challenger == winner && copy_heap[j]->getName() < copy_heap[best]->getName())
                 best = j;
         }
         if (best != i)
         {
-            EmployeeData *tmp = v[i];
-            v[i] = v[best];
-            v[best] = tmp;
+            EmployeeData *tmp = copy_heap[i];
+            copy_heap[i] = copy_heap[best];
+            copy_heap[best] = tmp;
         }
     }
 
     (*fout) << "========PRINT_ST========\n";
-    for (size_t i = 0; i < v.size(); ++i)
+    for (size_t i = 0; i < copy_heap.size(); ++i)
     {
-        if (v[i] == NULL)
+        if (copy_heap[i] == NULL)
             continue;
-        (*fout) << v[i]->getName() << "/"
-                << v[i]->getDeptNo() << "/"
-                << v[i]->getID() << "/"
-                << v[i]->getIncome() << "\n";
+        (*fout) << copy_heap[i]->getName() << "/"
+                << copy_heap[i]->getDeptNo() << "/"
+                << copy_heap[i]->getID() << "/"
+                << copy_heap[i]->getIncome() << "\n";
     }
     (*fout) << " =======================\n\n";
     return true;

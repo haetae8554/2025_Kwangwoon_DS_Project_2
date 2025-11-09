@@ -3,9 +3,11 @@
 
 void EmployeeHeap::Insert(EmployeeData *data)
 {
+    //empty
     if (data == NULL)
         return;
 
+    //full
     if (datanum + 1 > maxCapacity)
     {
         ResizeArray();
@@ -16,10 +18,13 @@ void EmployeeHeap::Insert(EmployeeData *data)
     UpHeap(datanum);
 }
 
+// return top 
 EmployeeData *EmployeeHeap::Top()
 {
+    //empty
     if (IsEmpty())
         return NULL;
+        // not use 0 
     return heapArr[1];
 }
 
@@ -50,11 +55,17 @@ void EmployeeHeap::UpHeap(int index)
     // bubble up
     while (index > 1)
     {
+        // p node
         int parent = index / 2;
-        if (heapArr[parent] == NULL)
+        // no p
+        if (heapArr[parent] == NULL){
             break;
-        if (heapArr[index] == NULL)
+        }
+            
+        //
+        if (heapArr[index] == NULL){
             break;
+        }
 
         int a = heapArr[parent]->getIncome();
         int b = heapArr[index]->getIncome();
@@ -80,42 +91,45 @@ void EmployeeHeap::DownHeap(int index)
     {
         int left = index * 2;
         int right = index * 2 + 1;
-        int largest = index;
+        int big = index;
 
         if (left <= datanum)
         {
-            if (heapArr[left] != NULL && heapArr[largest] != NULL)
+            if (heapArr[left] != NULL && heapArr[big] != NULL)
             {
-                if (heapArr[left]->getIncome() > heapArr[largest]->getIncome())
+                // left big
+                if (heapArr[left]->getIncome() > heapArr[big]->getIncome())
                 {
-                    largest = left;
+                    big = left;
                 }
             }
-            else if (heapArr[left] != NULL && heapArr[largest] == NULL)
+            else if (heapArr[left] != NULL && heapArr[big] == NULL)
             {
-                largest = left;
+                big = left;
             }
         }
         if (right <= datanum)
         {
-            if (heapArr[right] != NULL && heapArr[largest] != NULL)
+            if (heapArr[right] != NULL && heapArr[big] != NULL)
             {
-                if (heapArr[right]->getIncome() > heapArr[largest]->getIncome())
+                //right big
+                if (heapArr[right]->getIncome() > heapArr[big]->getIncome())
                 {
-                    largest = right;
+                    big = right;
                 }
             }
-            else if (heapArr[right] != NULL && heapArr[largest] == NULL)
+            else if (heapArr[right] != NULL && heapArr[big] == NULL)
             {
-                largest = right;
+                big = right;
             }
         }
-        if (largest != index)
+        // swap 
+        if (big != index)
         {
             EmployeeData *tmp = heapArr[index];
-            heapArr[index] = heapArr[largest];
-            heapArr[largest] = tmp;
-            index = largest;
+            heapArr[index] = heapArr[big];
+            heapArr[big] = tmp;
+            index = big;
         }
         else
         {
@@ -124,6 +138,7 @@ void EmployeeHeap::DownHeap(int index)
     }
 }
 
+// copy and *2 size array 
 void EmployeeHeap::ResizeArray()
 {
     int newCap = maxCapacity * 2;
@@ -143,7 +158,7 @@ void EmployeeHeap::ResizeArray()
     heapArr = arr;
     maxCapacity = newCap;
 }
-
+// for print
 void EmployeeHeap::GetAll(vector<EmployeeData *> &out)
 {
     for (int i = 1; i <= datanum; i++)
